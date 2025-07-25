@@ -43,7 +43,7 @@ export default function Sidebar({ view, setView }) {
       setShowWorkspaceModal(false);
     } catch (error) {
       console.error('Failed to create workspace:', error);
-      setWorkspaceError(error.message || 'Failed to create workspace');
+      setWorkspaceError(error.message || 'Failed to create realm');
     } finally {
       setWorkspaceLoading(false);
     }
@@ -83,10 +83,10 @@ export default function Sidebar({ view, setView }) {
               const workspace = workspaces.find(w => w.id === e.target.value);
               setCurrentWorkspace(workspace);
             }}
-            aria-label="Select workspace"
+            aria-label="Select realm"
           >
             {workspaces.length === 0 ? (
-              <option value="">no workspaces</option>
+              <option value="">no realms</option>
             ) : (
               workspaces.map(workspace => (
                 <option key={workspace.id} value={workspace.id}>
@@ -98,8 +98,8 @@ export default function Sidebar({ view, setView }) {
           <button 
             className="btn btn-icon btn-sm btn-ghost"
             onClick={() => setShowWorkspaceModal(true)}
-            aria-label="Create new workspace"
-            title="Create workspace"
+            aria-label="Create new realm"
+            title="Create realm"
           >
             <span aria-hidden="true">+</span>
           </button>
@@ -107,8 +107,8 @@ export default function Sidebar({ view, setView }) {
             <button 
               className="btn btn-icon btn-sm btn-ghost"
               onClick={() => setShowSettings(true)}
-              aria-label="Workspace settings"
-              title="Workspace settings"
+              aria-label="Realm settings"
+              title="Realm settings"
             >
               <span aria-hidden="true">⚙</span>
             </button>
@@ -239,7 +239,7 @@ export default function Sidebar({ view, setView }) {
           setWorkspaceError('');
         }} role="dialog" aria-modal="true" aria-labelledby="workspace-modal-title">
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2 id="workspace-modal-title">Create Workspace</h2>
+            <h2 id="workspace-modal-title">Create Realm</h2>
             <form onSubmit={handleCreateWorkspace}>
               <div className="input-group">
                 <input
@@ -255,7 +255,7 @@ export default function Sidebar({ view, setView }) {
                   aria-describedby={workspaceError ? 'workspace-error' : undefined}
                   aria-invalid={!!workspaceError}
                 />
-                <label htmlFor="workspace-name" className="input-label">Workspace name</label>
+                <label htmlFor="workspace-name" className="input-label">Realm name</label>
               </div>
               {workspaceError && (
                 <div id="workspace-error" className="input-error-message" role="alert" aria-live="polite">
