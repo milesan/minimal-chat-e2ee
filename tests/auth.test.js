@@ -4,6 +4,7 @@ import express from 'express';
 import authRoutes from '../server/api/auth.js';
 import { initializeDatabase } from '../server/db/index.js';
 import db from '../server/db/index.js';
+import { runMigrations } from '../server/db/migrations.js';
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use('/api/auth', authRoutes);
 describe('Authentication API', () => {
   beforeAll(async () => {
     await initializeDatabase();
+    runMigrations();
     // Clean up any existing data
     db.exec('PRAGMA foreign_keys = OFF');
     db.exec(`

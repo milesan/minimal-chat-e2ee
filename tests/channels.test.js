@@ -5,6 +5,7 @@ import authRoutes from '../server/api/auth.js';
 import channelRoutes from '../server/api/channels.js';
 import { initializeDatabase } from '../server/db/index.js';
 import db from '../server/db/index.js';
+import { runMigrations } from '../server/db/migrations.js';
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,7 @@ describe('Channels API', () => {
 
   beforeAll(async () => {
     await initializeDatabase();
+    runMigrations();
     // Clean up any existing data
     db.exec('PRAGMA foreign_keys = OFF');
     db.exec(`
