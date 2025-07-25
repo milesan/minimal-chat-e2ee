@@ -64,7 +64,7 @@ export default function LinksView({ isGreatest = false }) {
     <div className="links-view">
       {!currentWorkspace ? (
         <div className="no-workspace">
-          <p>Please create or select a workspace first</p>
+          <p>Please create or select a realm first</p>
         </div>
       ) : (
         <>

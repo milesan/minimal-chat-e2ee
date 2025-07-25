@@ -81,11 +81,11 @@ export default function WorkspaceSettings({ onClose }) {
       <div className="settings-overlay" onClick={onClose}>
         <div className="settings-modal" onClick={e => e.stopPropagation()}>
           <div className="settings-header">
-            <h2>workspace settings</h2>
+            <h2>realm settings</h2>
             <button className="close-btn" onClick={onClose}>×</button>
           </div>
           <div className="settings-content">
-            <p className="settings-error">only workspace owners can modify settings</p>
+            <p className="settings-error">only realm owners can modify settings</p>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function WorkspaceSettings({ onClose }) {
             <h3>general</h3>
             
             <div className="form-group">
-              <label htmlFor="workspace-name">workspace name</label>
+              <label htmlFor="workspace-name">realm name</label>
               <input
                 id="workspace-name"
                 type="text"
