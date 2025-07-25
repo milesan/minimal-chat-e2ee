@@ -2,6 +2,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db/index.js';
 import { authenticateToken } from './auth.js';
+import { validateName, validateImageData } from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -49,8 +50,13 @@ router.put('/:workspaceId/settings', (req, res) => {
     const params = [];
 
     if (name !== undefined) {
+      // Validate workspace name
+      const nameValidation = validateName(name, 'Workspace name');
+      if (!nameValidation.valid) {
+        return res.status(400).json({ error: nameValidation.error });
+      }
       updates.push('name = ?');
-      params.push(name);
+      params.push(nameValidation.value);
     }
 
     if (images_enabled !== undefined) {
@@ -81,6 +87,12 @@ router.post('/:workspaceId/upload', (req, res) => {
   const { workspaceId } = req.params;
   const userId = req.user.id;
   const { image_data, filename } = req.body;
+
+  // Validate image data
+  const imageValidation = validateImageData(image_data, filename);
+  if (!imageValidation.valid) {
+    return res.status(400).json({ error: imageValidation.error });
+  }
 
   try {
     // Check if workspace has images enabled
@@ -118,7 +130,7 @@ router.post('/:workspaceId/upload', (req, res) => {
     `);
 
     db.prepare('INSERT INTO images (id, workspace_id, uploaded_by, filename, data) VALUES (?, ?, ?, ?, ?)').run(
-      imageId, workspaceId, userId, filename, image_data
+      imageId, workspaceId, userId, imageValidation.filename, imageValidation.value
     );
 
     res.json({ 

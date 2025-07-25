@@ -95,15 +95,19 @@ export class CryptoService {
       'black', 'white', 'silver', 'gold', 'bronze', 'copper', 'iron', 'steel'
     ];
     
+    // Use crypto.getRandomValues for secure randomness
+    const randomValues = new Uint32Array(5);
+    crypto.getRandomValues(randomValues);
+    
     // Pick 4 random words
     const selected = [];
     for (let i = 0; i < 4; i++) {
-      const index = Math.floor(Math.random() * words.length);
+      const index = randomValues[i] % words.length;
       selected.push(words[index]);
     }
     
     // Add a random number
-    const number = Math.floor(Math.random() * 100);
+    const number = randomValues[4] % 100;
     
     return selected.join('-') + '-' + number;
   }

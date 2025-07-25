@@ -1,9 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db/index.js';
+import { config } from '../config.js';
 import { handleVoiceEvents } from './voice.js';
+import { applyRateLimit } from './rateLimiter.js';
+import { validateMessage } from '../utils/validation.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = config.JWT_SECRET;
 
 export const handleSocketConnection = (io, socket) => {
   let userId = null;
@@ -25,7 +28,7 @@ export const handleSocketConnection = (io, socket) => {
     }
   });
 
-  socket.on('join_workspace', (workspaceId) => {
+  socket.on('join_workspace', applyRateLimit(socket, 'join_workspace', (workspaceId) => {
     if (!userId) {
       return socket.emit('error', { error: 'Not authenticated' });
     }
@@ -42,9 +45,9 @@ export const handleSocketConnection = (io, socket) => {
     currentWorkspace = workspaceId;
     socket.join(`workspace:${workspaceId}`);
     socket.emit('joined_workspace', { workspaceId });
-  });
+  }));
 
-  socket.on('join_channel', (channelId) => {
+  socket.on('join_channel', applyRateLimit(socket, 'join_channel', (channelId) => {
     if (!userId || !currentWorkspace) {
       return socket.emit('error', { error: 'Not in workspace' });
     }
@@ -63,25 +66,29 @@ export const handleSocketConnection = (io, socket) => {
     socket.emit('joined_channel', { channelId });
 
     io.to(`channel:${channelId}`).emit('user_joined_channel', { userId, channelId });
-  });
+  }));
 
-  socket.on('send_message', (data) => {
+  socket.on('send_message', applyRateLimit(socket, 'send_message', (data) => {
     if (!userId || !currentChannel) {
       return socket.emit('error', { error: 'Not in channel' });
     }
 
     const { content, threadId, encrypted, encryptionMetadata } = data;
-    if (!content || content.trim().length === 0) {
-      return socket.emit('error', { error: 'Message content required' });
+    
+    // Validate message content
+    const messageValidation = validateMessage(content);
+    if (!messageValidation.valid) {
+      return socket.emit('error', { error: messageValidation.error });
     }
 
     try {
       const messageId = uuidv4();
       const timestamp = Math.floor(Date.now() / 1000);
       const encryptedValue = encrypted ? 1 : 0;
+      const validContent = messageValidation.value;
 
       db.prepare('INSERT INTO messages (id, channel_id, user_id, content, thread_id, created_at, encrypted, encryption_metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
-        messageId, currentChannel, userId, content, threadId || null, timestamp, encryptedValue, encryptionMetadata || null
+        messageId, currentChannel, userId, validContent, threadId || null, timestamp, encryptedValue, encryptionMetadata || null
       );
 
       const user = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
@@ -91,7 +98,7 @@ export const handleSocketConnection = (io, socket) => {
         channel_id: currentChannel,
         user_id: userId,
         username: user.username,
-        content,
+        content: validContent,
         thread_id: threadId || null,
         created_at: timestamp,
         encrypted: encryptedValue,
@@ -106,9 +113,9 @@ export const handleSocketConnection = (io, socket) => {
     } catch (error) {
       socket.emit('error', { error: 'Failed to send message' });
     }
-  });
+  }));
 
-  socket.on('join_thread', (threadId) => {
+  socket.on('join_thread', applyRateLimit(socket, 'join_thread', (threadId) => {
     if (!userId) {
       return socket.emit('error', { error: 'Not authenticated' });
     }
@@ -124,9 +131,9 @@ export const handleSocketConnection = (io, socket) => {
     `).all(threadId);
 
     socket.emit('thread_messages', { threadId, messages });
-  });
+  }));
 
-  socket.on('typing', (data) => {
+  socket.on('typing', applyRateLimit(socket, 'typing', (data) => {
     if (!userId || !currentChannel) return;
 
     const user = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
@@ -136,23 +143,23 @@ export const handleSocketConnection = (io, socket) => {
       username: user.username,
       channelId: currentChannel
     });
-  });
+  }));
 
-  socket.on('stop_typing', () => {
+  socket.on('stop_typing', applyRateLimit(socket, 'stop_typing', () => {
     if (!userId || !currentChannel) return;
 
     socket.to(`channel:${currentChannel}`).emit('user_stopped_typing', {
       userId,
       channelId: currentChannel
     });
-  });
+  }));
 
-  socket.on('dm_message', (message) => {
+  socket.on('dm_message', applyRateLimit(socket, 'dm_message', (message) => {
     if (!userId) return;
     
     // Emit to the receiver if they're online
     socket.to(`user:${message.receiver_id}`).emit('new_dm', message);
-  });
+  }));
 
   socket.on('disconnect', () => {
     if (userId) {

@@ -3,6 +3,7 @@ import { useSocket } from '../stores/socketStore.jsx';
 import { useQuote } from '../stores/quoteStore.jsx';
 import { useEncryption } from '../stores/encryptionStore.jsx';
 import { CryptoService } from '../services/crypto.js';
+import { escapeHtml, isValidImageUrl, sanitizeUsername } from '../utils/sanitize.js';
 import ThreadView from './ThreadView.jsx';
 import './Message.css';
 
@@ -65,11 +66,11 @@ export default function Message({ message }) {
     <>
       <div className="message" onClick={handleClick}>
         <div className="message-avatar">
-          {message.username[0].toUpperCase()}
+          {sanitizeUsername(message.username)[0]?.toUpperCase() || '?'}
         </div>
         <div className="message-content">
           <div className="message-header">
-            <span className="message-author">{message.username}</span>
+            <span className="message-author">{sanitizeUsername(message.username)}</span>
             <span className="message-time">{timeString}</span>
           </div>
           <div className="message-text">
@@ -77,14 +78,14 @@ export default function Message({ message }) {
               if (line.startsWith('> ')) {
                 return (
                   <div key={i} className="quoted-line">
-                    {line.substring(2)}
+                    {escapeHtml(line.substring(2))}
                   </div>
                 );
               }
-              return <div key={i}>{line}</div>;
+              return <div key={i}>{escapeHtml(line)}</div>;
             })}
           </div>
-          {message.image_url && (
+          {message.image_url && isValidImageUrl(message.image_url) && (
             <div className="message-image">
               <img src={message.image_url} alt="Uploaded image" />
             </div>

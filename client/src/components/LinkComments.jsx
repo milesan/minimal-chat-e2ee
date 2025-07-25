@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../stores/authStore.jsx';
+import { escapeHtml, sanitizeUsername } from '../utils/sanitize.js';
 import './LinkComments.css';
 
 export default function LinkComments({ linkId, onClose }) {
@@ -60,12 +61,12 @@ export default function LinkComments({ linkId, onClose }) {
           comments.map(comment => (
             <div key={comment.id} className="comment">
               <div className="comment-header">
-                <span className="comment-author">{comment.username}</span>
+                <span className="comment-author">{sanitizeUsername(comment.username)}</span>
                 <span className="comment-time">
                   {new Date(comment.created_at * 1000).toLocaleString()}
                 </span>
               </div>
-              <div className="comment-text">{comment.content}</div>
+              <div className="comment-text">{escapeHtml(comment.content)}</div>
             </div>
           ))
         )}

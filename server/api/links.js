@@ -2,6 +2,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db/index.js';
 import { authenticateToken } from './auth.js';
+import { validateUrl, validateName, validateText, validateMessage } from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -12,8 +13,32 @@ router.post('/workspaces/:workspaceId/links', (req, res) => {
   const { url, title, topic, description, short_description } = req.body;
   const userId = req.user.id;
 
-  if (!url || !title) {
-    return res.status(400).json({ error: 'URL and title required' });
+  // Validate URL
+  const urlValidation = validateUrl(url);
+  if (!urlValidation.valid) {
+    return res.status(400).json({ error: urlValidation.error });
+  }
+
+  // Validate title
+  const titleValidation = validateName(title, 'Title');
+  if (!titleValidation.valid) {
+    return res.status(400).json({ error: titleValidation.error });
+  }
+
+  // Validate optional fields
+  const topicValidation = validateText(topic, 'Topic', 50);
+  if (!topicValidation.valid) {
+    return res.status(400).json({ error: topicValidation.error });
+  }
+
+  const descValidation = validateText(description, 'Description', 500);
+  if (!descValidation.valid) {
+    return res.status(400).json({ error: descValidation.error });
+  }
+
+  const shortDescValidation = validateText(short_description, 'Short description', 200);
+  if (!shortDescValidation.valid) {
+    return res.status(400).json({ error: shortDescValidation.error });
   }
 
   try {
@@ -24,7 +49,9 @@ router.post('/workspaces/:workspaceId/links', (req, res) => {
 
     const linkId = uuidv4();
     db.prepare('INSERT INTO links (id, workspace_id, url, title, topic, description, short_description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
-      linkId, workspaceId, url, title, topic || null, description || null, short_description || null, userId
+      linkId, workspaceId, urlValidation.value, titleValidation.value, 
+      topicValidation.value || null, descValidation.value || null, 
+      shortDescValidation.value || null, userId
     );
 
     const link = db.prepare(`
@@ -118,8 +145,10 @@ router.post('/links/:linkId/comments', (req, res) => {
   const { content } = req.body;
   const userId = req.user.id;
 
-  if (!content || content.trim().length === 0) {
-    return res.status(400).json({ error: 'Comment content required' });
+  // Validate comment content
+  const contentValidation = validateMessage(content);
+  if (!contentValidation.valid) {
+    return res.status(400).json({ error: contentValidation.error });
   }
 
   try {
@@ -134,8 +163,9 @@ router.post('/links/:linkId/comments', (req, res) => {
     }
 
     const commentId = uuidv4();
+    const validContent = contentValidation.value;
     db.prepare('INSERT INTO link_comments (id, link_id, user_id, content) VALUES (?, ?, ?, ?)').run(
-      commentId, linkId, userId, content
+      commentId, linkId, userId, validContent
     );
 
     const comment = db.prepare(`
