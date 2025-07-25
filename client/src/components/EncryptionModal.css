@@ -1,0 +1,159 @@
+.encryption-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.encryption-modal {
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.encryption-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.encryption-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.channel-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.encryption-form {
+  padding: 20px;
+}
+
+.suggested-password {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.suggested-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.suggested-value {
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  padding: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+
+.use-suggested {
+  font-size: 12px;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: white;
+  border: 1px solid var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: none;
+}
+
+.use-suggested:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.use-suggested:active {
+  transform: translate(1px, 1px);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  text-transform: lowercase;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 4px;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
+.encryption-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.encryption-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin: 20px 0;
+}
+
+.encryption-info p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.encryption-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}

@@ -1,0 +1,14 @@
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 24px;
+}
+
+.empty-messages {
+  text-align: center;
+  color: var(--text-tertiary);
+  padding: 64px 24px;
+  font-size: 12px;
+  opacity: 0.8;
+}

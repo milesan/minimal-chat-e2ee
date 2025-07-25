@@ -1,0 +1,122 @@
+.link-comments {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+.comments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.comments-title {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.close-comments {
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: none;
+  border: 1px solid var(--border);
+}
+
+.close-comments:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.comments-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.no-comments {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  padding: 12px 0;
+}
+
+.comment {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.comment:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: lowercase;
+}
+
+.comment-time {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: monospace;
+}
+
+.comment-text {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  transition: none;
+}
+
+.comment-input:focus {
+  border-color: var(--text-tertiary);
+  outline: none;
+}
+
+.comment-submit {
+  padding: 4px 12px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--accent);
+  color: white;
+  border: 1px solid var(--accent);
+  transition: none;
+}
+
+.comment-submit:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.comment-submit:active {
+  transform: translate(1px, 1px);
+}

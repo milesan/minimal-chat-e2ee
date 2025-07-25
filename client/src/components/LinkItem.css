@@ -1,0 +1,144 @@
+.link-item {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.link-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.link-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.link-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.link-title:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.link-topic {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.link-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.link-author {
+  text-transform: lowercase;
+}
+
+.link-stats {
+  font-family: monospace;
+}
+
+.link-comments-btn {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  transition: none;
+}
+
+.link-comments-btn:hover {
+  color: var(--text-primary);
+}
+
+.link-rating {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.rating-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.rating-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.rating-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  font-family: monospace;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: none;
+}
+
+.rating-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+
+.rating-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.rating-btn:active {
+  transform: translate(1px, 1px);
+}
+
+.link-short-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 6px 0;
+  line-height: 1.4;
+}
+
+.link-description {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+.description-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.description-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}

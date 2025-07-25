@@ -1,0 +1,139 @@
+.voice-call {
+  position: fixed;
+  bottom: 48px;
+  right: 12px;
+  width: 240px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  z-index: 900;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.voice-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.voice-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-voice-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: none;
+  border: 1px solid var(--border);
+}
+
+.close-voice-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.voice-connecting {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.voice-participants {
+  padding: 16px;
+}
+
+.voice-participants h4 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.participant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.participant-avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--text-tertiary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.participant-name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.muted-indicator {
+  font-size: 14px;
+}
+
+.voice-controls {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+}
+
+.voice-control-btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 18px;
+  background: var(--bg-secondary);
+  transition: none;
+  border: 1px solid var(--border);
+}
+
+.voice-control-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.voice-control-btn.muted {
+  background: var(--danger);
+  color: white;
+}
+
+.voice-control-btn.leave {
+  background: var(--danger);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.voice-control-btn.leave:hover {
+  background: #c82333;
+}

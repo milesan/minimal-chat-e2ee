@@ -1,0 +1,235 @@
+.dm-view {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dm-sidebar {
+  width: 240px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dm-header h3 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.new-dm-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  transition: none;
+}
+
+.new-dm-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.user-search {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-search-input {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.user-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.user-item {
+  width: 100%;
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  transition: none;
+}
+
+.user-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  transition: none;
+  cursor: pointer;
+}
+
+.conversation-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.conversation-item.active {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--accent);
+}
+
+.conversation-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.conversation-preview {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.dm-empty .empty-icon {
+  font-size: 64px;
+  opacity: 0.2;
+  margin-bottom: 24px;
+}
+
+.dm-empty .empty-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.dm-empty .empty-hint {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  opacity: 0.8;
+}
+
+.dm-chat-header {
+  height: 48px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+}
+
+.dm-chat-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dm-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dm-message {
+  display: flex;
+}
+
+.dm-message.sent {
+  justify-content: flex-end;
+}
+
+.dm-message.received {
+  justify-content: flex-start;
+}
+
+.dm-message-content {
+  max-width: 70%;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+.dm-message.sent .dm-message-content {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.dm-message-author {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+.dm-message.sent .dm-message-author {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dm-message.received .dm-message-author {
+  color: var(--text-secondary);
+}
+
+.dm-message-text {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+}
+
+.dm-message-time {
+  font-size: 10px;
+  opacity: 0.6;
+  font-family: monospace;
+}

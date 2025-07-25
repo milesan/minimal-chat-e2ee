@@ -1,0 +1,156 @@
+.world-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.world-header {
+  height: 48px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-secondary);
+}
+
+.world-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--text-primary);
+}
+
+.world-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: lowercase;
+}
+
+.world-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.empty-world {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 48px;
+}
+
+.empty-world .empty-icon {
+  font-size: 64px;
+  line-height: 1;
+  opacity: 0.2;
+  margin-bottom: 24px;
+}
+
+.empty-world .empty-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.empty-world .empty-hint {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  opacity: 0.8;
+}
+
+.world-messages {
+  padding: 20px;
+}
+
+.world-message {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: none;
+}
+
+.world-message:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-tertiary);
+}
+
+.world-message:active {
+  transform: translate(1px, 1px);
+}
+
+.world-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.world-channel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: lowercase;
+}
+
+.world-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: monospace;
+}
+
+.world-message-content {
+  display: flex;
+  gap: 12px;
+}
+
+.world-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--text-tertiary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.world-message-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.world-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  text-transform: lowercase;
+}
+
+.world-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-wrap: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.world-thread-info {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}

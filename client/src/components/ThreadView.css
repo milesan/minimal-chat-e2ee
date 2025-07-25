@@ -1,0 +1,170 @@
+.thread-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.thread-panel {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  background: var(--bg-primary);
+  border-left: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.2s ease-out;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 768px) {
+  .thread-panel {
+    max-width: 100%;
+  }
+}
+
+.thread-header {
+  height: 48px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+}
+
+.thread-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: none;
+  border: 1px solid var(--border);
+}
+
+.close-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.thread-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.thread-parent {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.thread-divider {
+  text-align: center;
+  margin: 32px 0;
+  position: relative;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.thread-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.thread-divider span {
+  background: var(--bg-primary);
+  padding: 0 20px;
+  position: relative;
+}
+
+.thread-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.thread-message {
+  display: flex;
+  gap: 12px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.thread-parent .message-actions,
+.thread-message .message-actions {
+  margin-top: 4px;
+  opacity: 0;
+  transition: none;
+}
+
+.thread-parent:hover .message-actions,
+.thread-message:hover .message-actions {
+  opacity: 1;
+}
+
+.thread-parent .message-content,
+.thread-message .message-content {
+  flex: 1;
+}
+
+.thread-parent .message-author,
+.thread-message .message-author {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.thread-parent .message-text,
+.thread-message .message-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.thread-input {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
