@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1d21; color: #e9ecef; }
+        button { padding: 5px 10px; margin: 5px; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; background: #22262c; border: 1px solid #373c44; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+    </style>
+</head>
+<body>
+    <h2>API Test</h2>
+    
+    <button onclick="testRegister()">Test Register</button>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testCreateWorkspace()">Test Create Workspace</button>
+    <button onclick="testCreateChannel()">Test Create Channel</button>
+    <button onclick="testCreateLink()">Test Create Link</button>
+    
+    <div id="results"></div>
+
+    <script>
+        let token = null;
+        let workspaceId = null;
+        
+        function addResult(text, isError = false) {
+            const div = document.createElement('div');
+            div.className = `result ${isError ? 'error' : 'success'}`;
+            div.textContent = text;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        async function testRegister() {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'testuser' + Date.now(),
+                        password: 'testpassword123'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    addResult('Register success! Token: ' + token.substring(0, 20) + '...');
+                } else {
+                    addResult('Register failed: ' + JSON.stringify(data), true);
+                }
+            } catch (error) {
+                addResult('Register error: ' + error.message, true);
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'testuser',
+                        password: 'testpassword123'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    addResult('Login success! Token: ' + token.substring(0, 20) + '...');
+                } else {
+                    addResult('Login failed: ' + JSON.stringify(data), true);
+                }
+            } catch (error) {
+                addResult('Login error: ' + error.message, true);
+            }
+        }
+        
+        async function testCreateWorkspace() {
+            if (!token) {
+                addResult('Please login first!', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/channels/workspaces', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: 'Test Workspace ' + Date.now() })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    workspaceId = data.id;
+                    addResult('Workspace created! ID: ' + workspaceId);
+                } else {
+                    addResult('Workspace creation failed: ' + JSON.stringify(data), true);
+                }
+            } catch (error) {
+                addResult('Workspace error: ' + error.message, true);
+            }
+        }
+        
+        async function testCreateChannel() {
+            if (!token || !workspaceId) {
+                addResult('Please login and create workspace first!', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/channels/workspaces/${workspaceId}/channels`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: 'test-channel-' + Date.now() })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    addResult('Channel created! ID: ' + data.id);
+                } else {
+                    addResult('Channel creation failed: ' + JSON.stringify(data), true);
+                }
+            } catch (error) {
+                addResult('Channel error: ' + error.message, true);
+            }
+        }
+        
+        async function testCreateLink() {
+            if (!token || !workspaceId) {
+                addResult('Please login and create workspace first!', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/links/workspaces/${workspaceId}/links`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: 'https://example.com',
+                        title: 'Test Link',
+                        topic: 'testing'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    addResult('Link created! ID: ' + data.id);
+                } else {
+                    addResult('Link creation failed: ' + JSON.stringify(data), true);
+                }
+            } catch (error) {
+                addResult('Link error: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

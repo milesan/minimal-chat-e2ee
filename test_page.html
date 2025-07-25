@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Chat API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        input, button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minimal Chat API Test</h1>
+    
+    <div class="section">
+        <h2>1. Authentication</h2>
+        <div>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="register()">Register</button>
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="authResult"></div>
+    </div>
+
+    <div class="section hidden" id="workspaceSection">
+        <h2>2. Workspace Management</h2>
+        <div>
+            <input type="text" id="workspaceName" placeholder="Workspace name">
+            <button onclick="createWorkspace()">Create Workspace</button>
+            <button onclick="fetchWorkspaces()">Refresh Workspaces</button>
+        </div>
+        <div id="workspaceResult"></div>
+        <div id="workspaceList"></div>
+    </div>
+
+    <div class="section hidden" id="linkSection">
+        <h2>3. Link Management</h2>
+        <div>
+            <input type="url" id="linkUrl" placeholder="URL">
+            <input type="text" id="linkTitle" placeholder="Title">
+            <input type="text" id="linkTopic" placeholder="Topic (optional)">
+            <button onclick="createLink()">Add Link</button>
+            <button onclick="fetchLinks()">Refresh Links</button>
+        </div>
+        <div id="linkResult"></div>
+        <div id="linkList"></div>
+    </div>
+
+    <div class="section">
+        <h2>Console Log</h2>
+        <div id="console" class="log"></div>
+    </div>
+
+    <script>
+        let token = null;
+        let currentWorkspace = null;
+
+        function log(message, type = 'info') {
+            const consoleDiv = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            consoleDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token && { 'Authorization': `Bearer ${token}` }),
+                        ...options.headers
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            log(`Registering user: ${username}`);
+            
+            const result = await makeRequest('http://localhost:3033/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (result.success) {
+                token = result.data.token;
+                document.getElementById('authResult').innerHTML = `<div class="success">Registered as ${result.data.user.username}</div>`;
+                document.getElementById('workspaceSection').classList.remove('hidden');
+                log('Registration successful', 'success');
+                fetchWorkspaces();
+            } else {
+                document.getElementById('authResult').innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                log(`Registration failed: ${result.error}`, 'error');
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            log(`Logging in user: ${username}`);
+            
+            const result = await makeRequest('http://localhost:3033/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (result.success) {
+                token = result.data.token;
+                document.getElementById('authResult').innerHTML = `<div class="success">Logged in as ${result.data.user.username}</div>`;
+                document.getElementById('workspaceSection').classList.remove('hidden');
+                log('Login successful', 'success');
+                fetchWorkspaces();
+            } else {
+                document.getElementById('authResult').innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                log(`Login failed: ${result.error}`, 'error');
+            }
+        }
+
+        async function createWorkspace() {
+            const name = document.getElementById('workspaceName').value;
+            
+            log(`Creating workspace: ${name}`);
+            
+            const result = await makeRequest('http://localhost:3033/api/channels/workspaces', {
+                method: 'POST',
+                body: JSON.stringify({ name })
+            });
+
+            if (result.success) {
+                document.getElementById('workspaceResult').innerHTML = `<div class="success">Created workspace: ${result.data.name}</div>`;
+                log('Workspace created successfully', 'success');
+                fetchWorkspaces();
+            } else {
+                document.getElementById('workspaceResult').innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                log(`Failed to create workspace: ${result.error}`, 'error');
+            }
+        }
+
+        async function fetchWorkspaces() {
+            log('Fetching workspaces...');
+            
+            const result = await makeRequest('http://localhost:3033/api/channels/workspaces');
+
+            if (result.success) {
+                const workspaces = result.data;
+                log(`Found ${workspaces.length} workspaces`, 'success');
+                
+                if (workspaces.length > 0) {
+                    currentWorkspace = workspaces[0];
+                    document.getElementById('linkSection').classList.remove('hidden');
+                    
+                    const list = workspaces.map(ws => `
+                        <div style="padding: 5px; background: #f0f0f0; margin: 5px 0; border-radius: 4px;">
+                            ${ws.name} (${ws.role})
+                            <button onclick="selectWorkspace('${ws.id}', '${ws.name}')">Select</button>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('workspaceList').innerHTML = `<h3>Your Workspaces:</h3>${list}`;
+                } else {
+                    document.getElementById('workspaceList').innerHTML = '<p>No workspaces yet. Create one above!</p>';
+                }
+            } else {
+                log(`Failed to fetch workspaces: ${result.error}`, 'error');
+            }
+        }
+
+        function selectWorkspace(id, name) {
+            currentWorkspace = { id, name };
+            log(`Selected workspace: ${name}`);
+            fetchLinks();
+        }
+
+        async function createLink() {
+            if (!currentWorkspace) {
+                alert('Please select a workspace first');
+                return;
+            }
+
+            const url = document.getElementById('linkUrl').value;
+            const title = document.getElementById('linkTitle').value;
+            const topic = document.getElementById('linkTopic').value;
+            
+            log(`Creating link in workspace ${currentWorkspace.name}`);
+            
+            const result = await makeRequest(`http://localhost:3033/api/links/workspaces/${currentWorkspace.id}/links`, {
+                method: 'POST',
+                body: JSON.stringify({ url, title, topic })
+            });
+
+            if (result.success) {
+                document.getElementById('linkResult').innerHTML = `<div class="success">Created link: ${result.data.title}</div>`;
+                log('Link created successfully', 'success');
+                fetchLinks();
+            } else {
+                document.getElementById('linkResult').innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                log(`Failed to create link: ${result.error}`, 'error');
+            }
+        }
+
+        async function fetchLinks() {
+            if (!currentWorkspace) return;
+            
+            log(`Fetching links for workspace: ${currentWorkspace.name}`);
+            
+            const result = await makeRequest(`http://localhost:3033/api/links/workspaces/${currentWorkspace.id}/links`);
+
+            if (result.success) {
+                const links = result.data;
+                log(`Found ${links.length} links`, 'success');
+                
+                if (links.length > 0) {
+                    const list = links.map(link => `
+                        <div style="padding: 10px; background: #f0f0f0; margin: 5px 0; border-radius: 4px;">
+                            <strong>${link.title}</strong><br>
+                            <a href="${link.url}" target="_blank">${link.url}</a><br>
+                            ${link.topic ? `Topic: ${link.topic}<br>` : ''}
+                            <small>By ${link.creator_username} • Rating: ${link.avg_rating.toFixed(1)} (${link.rating_count} votes)</small>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('linkList').innerHTML = `<h3>Links in ${currentWorkspace.name}:</h3>${list}`;
+                } else {
+                    document.getElementById('linkList').innerHTML = '<p>No links yet. Add one above!</p>';
+                }
+            } else {
+                log(`Failed to fetch links: ${result.error}`, 'error');
+            }
+        }
+
+        // Initial log
+        log('Test page loaded. Please register or login to begin.');
+    </script>
+</body>
+</html>

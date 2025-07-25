@@ -8,6 +8,7 @@ import { SocketProvider } from './stores/socketStore.jsx';
 import { WorkspaceProvider } from './stores/workspaceStore.jsx';
 import { QuoteProvider } from './stores/quoteStore.jsx';
 import { EncryptionProvider } from './stores/encryptionStore.jsx';
+import { getWebSocketUrl } from './config.js';
 
 function AppContent() {
   const { user, token } = useAuth();
@@ -15,9 +16,11 @@ function AppContent() {
 
   useEffect(() => {
     if (token) {
-      const newSocket = io('http://localhost:3034', {
-        transports: ['websocket'],
-        upgrade: false
+      const newSocket = io(getWebSocketUrl(), {
+        transports: ['websocket', 'polling'],
+        auth: {
+          token: token
+        }
       });
 
       newSocket.on('connect', () => {

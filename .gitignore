@@ -45,3 +45,7 @@ tmp/
 temp/
 *.tmp
 *.temp.env
+*.temp
+
+# Local Netlify folder
+.netlify

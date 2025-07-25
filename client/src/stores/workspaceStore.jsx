@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './authStore.jsx';
 import { useSocket } from './socketStore.jsx';
+import { getApiUrl } from '../config.js';
 
 const WorkspaceContext = createContext();
 
@@ -49,7 +50,7 @@ export function WorkspaceProvider({ children }) {
 
   const fetchWorkspaces = async () => {
     try {
-      const response = await fetch('/api/channels/workspaces', {
+      const response = await fetch(getApiUrl('/api/channels/workspaces'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -100,7 +101,7 @@ export function WorkspaceProvider({ children }) {
 
   const createWorkspace = async (name) => {
     try {
-      const response = await fetch('/api/channels/workspaces', {
+      const response = await fetch(getApiUrl('/api/channels/workspaces'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

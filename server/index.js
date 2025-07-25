@@ -13,6 +13,7 @@ import channelRoutes from './api/channels.js';
 import linkRoutes from './api/links.js';
 import dmRoutes from './api/dms.js';
 import workspaceRoutes from './api/workspaces.js';
+import healthRoutes from './health.js';
 import { handleSocketConnection } from './websocket/index.js';
 
 const app = express();
@@ -98,6 +99,7 @@ app.use('/api/channels', channelRoutes);
 app.use('/api/links', linkRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api', dmRoutes);
+app.use('/api', healthRoutes);
 
 io.on('connection', (socket) => handleSocketConnection(io, socket));
 

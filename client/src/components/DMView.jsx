@@ -3,6 +3,7 @@ import { useAuth } from '../stores/authStore.jsx';
 import { useSocket } from '../stores/socketStore.jsx';
 import MessageInput from './MessageInput.jsx';
 import './DMView.css';
+import { getApiUrl } from '../config.js';
 
 export default function DMView() {
   const { user, token } = useAuth();
@@ -44,7 +45,7 @@ export default function DMView() {
 
   const fetchConversations = async () => {
     try {
-      const response = await fetch('/api/dms', {
+      const response = await fetch(getApiUrl('/api/dms'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -56,7 +57,7 @@ export default function DMView() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch(getApiUrl('/api/users'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
