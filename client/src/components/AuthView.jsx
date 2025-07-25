@@ -8,11 +8,34 @@ export default function AuthView() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState({ username: false, password: false });
   const { login, register } = useAuth();
+
+  const validateUsername = () => {
+    if (!username) return 'Username is required';
+    if (username.length < 3) return 'Username must be at least 3 characters';
+    return '';
+  };
+
+  const validatePassword = () => {
+    if (!password) return 'Password is required';
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    return '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setTouched({ username: true, password: true });
+
+    const usernameError = validateUsername();
+    const passwordError = validatePassword();
+    
+    if (usernameError || passwordError) {
+      setError(usernameError || passwordError);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -47,10 +70,11 @@ export default function AuthView() {
           <div className="form-group">
             <input
               type="text"
-              className="input"
+              className={`input ${touched.username && validateUsername() ? 'input-error' : ''}`}
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              onBlur={() => setTouched({ ...touched, username: true })}
               required
               autoFocus
             />
@@ -59,10 +83,11 @@ export default function AuthView() {
           <div className="form-group">
             <input
               type="password"
-              className="input"
+              className={`input ${touched.password && validatePassword() ? 'input-error' : ''}`}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => setTouched({ ...touched, password: true })}
               required
               minLength={8}
             />
@@ -71,7 +96,11 @@ export default function AuthView() {
           {error && <div className="error">{error}</div>}
 
           <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
-            {loading ? 'Loading...' : (isLogin ? 'Sign in' : 'Sign up')}
+            {loading ? (
+              <div className="spinner"></div>
+            ) : (
+              isLogin ? 'Sign in' : 'Sign up'
+            )}
           </button>
         </form>
 
