@@ -40,21 +40,21 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'testpassword123'
         });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('user');
-      expect(response.body.user.username).toBe('testuser');
+      expect(response.body.user.username).toBe('authtest1');
     });
 
     it('should reject duplicate usernames', async () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'anotherpassword'
         });
 
@@ -80,7 +80,7 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'testpassword123'
         });
 
@@ -93,7 +93,7 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'wrongpassword'
         });
 

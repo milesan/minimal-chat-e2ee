@@ -83,13 +83,22 @@ export const runMigrations = () => {
     // Check if encrypted columns exist in channels
     const channelsTable = db.prepare("PRAGMA table_info(channels)").all();
     const hasChannelsEncrypted = channelsTable.some(col => col.name === 'encrypted');
+    const hasChannelsIsEncrypted = channelsTable.some(col => col.name === 'is_encrypted');
+    const hasPasswordHint = channelsTable.some(col => col.name === 'password_hint');
     
-    if (!hasChannelsEncrypted) {
+    if (!hasChannelsEncrypted && !hasChannelsIsEncrypted) {
       db.exec(`
-        ALTER TABLE channels ADD COLUMN encrypted INTEGER DEFAULT 0;
+        ALTER TABLE channels ADD COLUMN is_encrypted INTEGER DEFAULT 0;
         ALTER TABLE channels ADD COLUMN encrypted_at INTEGER;
       `);
       console.log('Added encryption columns to channels table');
+    }
+    
+    if (!hasPasswordHint) {
+      db.exec(`
+        ALTER TABLE channels ADD COLUMN password_hint TEXT;
+      `);
+      console.log('Added password_hint column to channels table');
     }
 
     // Check if encryption columns exist in messages
@@ -131,5 +140,85 @@ export const runMigrations = () => {
     }
   } catch (e) {
     console.error('Encryption migration error:', e);
+  }
+
+  // Add missing columns for messages
+  try {
+    const messagesTable = db.prepare("PRAGMA table_info(messages)").all();
+    const hasQuotedMessageId = messagesTable.some(col => col.name === 'quoted_message_id');
+    
+    if (!hasQuotedMessageId) {
+      db.exec(`
+        ALTER TABLE messages ADD COLUMN quoted_message_id TEXT;
+      `);
+      console.log('Added quoted_message_id column to messages table');
+    }
+  } catch (e) {
+    console.error('Messages migration error:', e);
+  }
+
+  // Add missing columns for direct_messages
+  try {
+    const dmTable = db.prepare("PRAGMA table_info(direct_messages)").all();
+    const hasReadAt = dmTable.some(col => col.name === 'read_at');
+    
+    if (!hasReadAt) {
+      db.exec(`
+        ALTER TABLE direct_messages ADD COLUMN read_at INTEGER;
+      `);
+      console.log('Added read_at column to direct_messages table');
+    }
+  } catch (e) {
+    console.error('Direct messages migration error:', e);
+  }
+
+  // Add missing columns for voice_sessions
+  try {
+    const voiceTable = db.prepare("PRAGMA table_info(voice_sessions)").all();
+    const hasStartedBy = voiceTable.some(col => col.name === 'started_by');
+    
+    if (!hasStartedBy) {
+      db.exec(`
+        ALTER TABLE voice_sessions ADD COLUMN started_by TEXT;
+      `);
+      console.log('Added started_by column to voice_sessions table');
+    }
+  } catch (e) {
+    console.error('Voice sessions migration error:', e);
+  }
+
+  // Add missing columns for link_comments
+  try {
+    const linkCommentsTable = db.prepare("PRAGMA table_info(link_comments)").all();
+    const hasParentId = linkCommentsTable.some(col => col.name === 'parent_id');
+    
+    if (!hasParentId) {
+      db.exec(`
+        ALTER TABLE link_comments ADD COLUMN parent_id TEXT;
+      `);
+      console.log('Added parent_id column to link_comments table');
+    }
+  } catch (e) {
+    console.error('Link comments migration error:', e);
+  }
+
+  // Add link_votes table for voting system
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS link_votes (
+        link_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        vote INTEGER NOT NULL CHECK (vote IN (-1, 0, 1)),
+        created_at INTEGER DEFAULT (unixepoch()),
+        PRIMARY KEY (link_id, user_id),
+        FOREIGN KEY (link_id) REFERENCES links(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_link_votes_link ON link_votes(link_id);
+    `);
+    console.log('Created link_votes table');
+  } catch (e) {
+    // Table might already exist
   }
 };
