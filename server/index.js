@@ -12,7 +12,7 @@ import authRoutes from './api/auth.js';
 import channelRoutes from './api/channels.js';
 import linkRoutes from './api/links.js';
 import dmRoutes from './api/dms.js';
-import workspaceRoutes from './api/workspaces.js';
+import serverRoutes from './api/servers.js';
 import healthRoutes from './health.js';
 import { handleSocketConnection } from './websocket/index.js';
 
@@ -119,7 +119,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/links', linkRoutes);
-app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/servers', serverRoutes);
 app.use('/api', dmRoutes);
 app.use('/api', healthRoutes);
 

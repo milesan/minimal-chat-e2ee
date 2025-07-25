@@ -5,7 +5,7 @@ import ChatView from './components/ChatView.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
 import { AuthProvider, useAuth } from './stores/authStore.jsx';
 import { SocketProvider } from './stores/socketStore.jsx';
-import { WorkspaceProvider } from './stores/workspaceStore.jsx';
+import { ServerProvider } from './stores/serverStore.jsx';
 import { QuoteProvider } from './stores/quoteStore.jsx';
 import { EncryptionProvider } from './stores/encryptionStore.jsx';
 import { getWebSocketUrl } from './config.js';
@@ -37,7 +37,7 @@ function AppContent() {
 
   return (
     <SocketProvider socket={socket}>
-      <WorkspaceProvider>
+      <ServerProvider>
         <QuoteProvider>
           <EncryptionProvider>
             <div className="mobile-blocker">
@@ -53,7 +53,7 @@ function AppContent() {
             </div>
           </EncryptionProvider>
         </QuoteProvider>
-      </WorkspaceProvider>
+      </ServerProvider>
     </SocketProvider>
   );
 }

@@ -5,11 +5,11 @@ import LinksView from './LinksView.jsx';
 import InboxView from './InboxView.jsx';
 import DMView from './DMView.jsx';
 import WorldView from './WorldView.jsx';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import './ChatView.css';
 
 export default function ChatView() {
-  const { loading } = useWorkspace();
+  const { loading } = useServer();
   const [view, setView] = useState('chat');
 
   if (loading) {

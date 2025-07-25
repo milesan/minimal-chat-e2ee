@@ -24,7 +24,7 @@ export function validateUsername(username) {
   return { valid: true, value: trimmed };
 }
 
-// Validate workspace/channel name
+// Validate server/channel name
 export function validateName(name, type = 'name') {
   if (!name || typeof name !== 'string') {
     return { valid: false, error: `${type} is required` };
