@@ -68,7 +68,7 @@ export default function WorldView({ onViewChange }) {
     <div className="world-view">
       <div className="world-header">
         <h2>world</h2>
-        <span className="world-subtitle">all recent posts across {currentWorkspace?.name || 'workspace'}</span>
+        <span className="world-subtitle">all recent posts across {currentWorkspace?.name || 'realm'}</span>
       </div>
 
       <div className="world-content">
