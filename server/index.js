@@ -24,22 +24,28 @@ app.disable('x-powered-by');
 // CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
-    // In production, be more permissive if CLIENT_URL is not set
-    if (config.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
-      // Allow all origins in production if CLIENT_URL is not set
-      // This is temporary - you should set CLIENT_URL in production
-      console.warn('CLIENT_URL not set in production - allowing all origins. This is insecure!');
-      return callback(null, true);
-    }
-    
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
     
-    // Check if the origin is in the allowed list
-    if (config.ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
+    // In production, check against allowed origins
+    if (config.NODE_ENV === 'production') {
+      // If no CLIENT_URL is set, temporarily allow all (with warning)
+      if (!process.env.CLIENT_URL) {
+        console.warn('CLIENT_URL not set in production - allowing all origins. This is insecure!');
+        return callback(null, true);
+      }
+      
+      // Check if origin matches allowed origins
+      const allowedOrigins = config.ALLOWED_ORIGINS || [config.CLIENT_URL];
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log(`CORS blocked origin: ${origin}, allowed: ${allowedOrigins.join(', ')}`);
+        callback(new Error('Not allowed by CORS'));
+      }
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // In development, allow all origins
+      callback(null, true);
     }
   },
   credentials: true,
@@ -117,19 +123,40 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api', dmRoutes);
 app.use('/api', healthRoutes);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'CORS policy violation' });
+  }
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 io.on('connection', (socket) => handleSocketConnection(io, socket));
 
 const PORT = config.PORT;
 
+// Add startup logging
+console.log('Starting server with configuration:', {
+  NODE_ENV: config.NODE_ENV,
+  PORT: config.PORT,
+  CLIENT_URL: config.CLIENT_URL,
+  ALLOWED_ORIGINS: config.ALLOWED_ORIGINS,
+  JWT_SECRET_LENGTH: config.JWT_SECRET ? config.JWT_SECRET.length : 0
+});
+
 initializeDatabase().then(() => {
+  console.log('Database initialized successfully');
   runMigrations();
+  console.log('Migrations completed');
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Health check available at: http://0.0.0.0:${PORT}/health`);
   });
 }).catch(err => {
   // Log error internally but don't expose details
-  console.error('Failed to initialize database');
-  if (process.env.NODE_ENV === 'development') {
+  console.error('Failed to initialize database:', err.message);
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
     console.error('Error details:', err);
   }
   process.exit(1);
