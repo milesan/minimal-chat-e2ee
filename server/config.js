@@ -32,9 +32,20 @@ if (weakSecrets.includes(process.env.JWT_SECRET.toLowerCase())) {
   process.exit(1);
 }
 
+// Debug Railway environment
+console.log('Railway environment check:', {
+  PORT_RAW: process.env.PORT,
+  RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+  NODE_ENV: process.env.NODE_ENV,
+  All_ENV_KEYS: Object.keys(process.env).filter(key => key.includes('RAILWAY') || key === 'PORT')
+});
+
+// Parse PORT with better error handling
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3035;
+
 export const config = {
   JWT_SECRET: process.env.JWT_SECRET,
-  PORT: parseInt(process.env.PORT) || 3035,
+  PORT: port,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3033',
   NODE_ENV: process.env.NODE_ENV || 'development',
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [process.env.CLIENT_URL || 'http://localhost:3033']
