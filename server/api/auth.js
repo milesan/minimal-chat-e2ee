@@ -53,8 +53,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign({ id: userId, username: validUsername }, JWT_SECRET);
     res.json({ token, user: { id: userId, username: validUsername } });
   } catch (error) {
-    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      // More specific message since we know it's the username
+    if (error.code === 'SQLITE_CONSTRAINT' || error.message?.includes('UNIQUE constraint failed')) {
       res.status(409).json({ error: 'Username already exists' });
     } else {
       logError('auth.register', error);
