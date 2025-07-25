@@ -2,6 +2,8 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db/index.js';
 import { authenticateToken } from './auth.js';
+import { validateName } from '../utils/validation.js';
+import { handleDatabaseError, logError } from '../utils/errorHandler.js';
 
 const router = express.Router();
 
@@ -11,21 +13,25 @@ router.post('/workspaces', (req, res) => {
   const { name } = req.body;
   const userId = req.user.id;
 
-  if (!name) {
-    return res.status(400).json({ error: 'Workspace name required' });
+  // Validate workspace name
+  const nameValidation = validateName(name, 'Workspace name');
+  if (!nameValidation.valid) {
+    return res.status(400).json({ error: nameValidation.error });
   }
 
   try {
     const workspaceId = uuidv4();
+    const validName = nameValidation.value;
     
-    db.prepare('INSERT INTO workspaces (id, name, created_by) VALUES (?, ?, ?)').run(workspaceId, name, userId);
+    db.prepare('INSERT INTO workspaces (id, name, created_by) VALUES (?, ?, ?)').run(workspaceId, validName, userId);
     db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(workspaceId, userId, 'owner');
     
     const generalChannelId = uuidv4();
     db.prepare('INSERT INTO channels (id, workspace_id, name, created_by) VALUES (?, ?, ?, ?)').run(generalChannelId, workspaceId, 'general', userId);
 
-    res.json({ id: workspaceId, name });
+    res.json({ id: workspaceId, name: validName });
   } catch (error) {
+    logError('channels.createWorkspace', error);
     res.status(500).json({ error: 'Failed to create workspace' });
   }
 });
@@ -52,8 +58,10 @@ router.post('/workspaces/:workspaceId/channels', (req, res) => {
   const { name, encrypted } = req.body;
   const userId = req.user.id;
 
-  if (!name) {
-    return res.status(400).json({ error: 'Channel name required' });
+  // Validate channel name
+  const nameValidation = validateName(name, 'Channel name');
+  if (!nameValidation.valid) {
+    return res.status(400).json({ error: nameValidation.error });
   }
 
   try {
@@ -63,18 +71,20 @@ router.post('/workspaces/:workspaceId/channels', (req, res) => {
     }
 
     const channelId = uuidv4();
+    const validName = nameValidation.value;
     const encryptedValue = encrypted ? 1 : 0;
     const encryptedAt = encrypted ? Math.floor(Date.now() / 1000) : null;
     
     db.prepare('INSERT INTO channels (id, workspace_id, name, created_by, encrypted, encrypted_at) VALUES (?, ?, ?, ?, ?, ?)').run(
-      channelId, workspaceId, name, userId, encryptedValue, encryptedAt
+      channelId, workspaceId, validName, userId, encryptedValue, encryptedAt
     );
 
-    res.json({ id: channelId, name, workspace_id: workspaceId, encrypted: encryptedValue });
+    res.json({ id: channelId, name: validName, workspace_id: workspaceId, encrypted: encryptedValue });
   } catch (error) {
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       res.status(409).json({ error: 'Channel name already exists' });
     } else {
+      logError('channels.createChannel', error);
       res.status(500).json({ error: 'Failed to create channel' });
     }
   }

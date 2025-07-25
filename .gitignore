@@ -44,4 +44,4 @@ coverage/
 tmp/
 temp/
 *.tmp
-*.temp
+*.temp.env
