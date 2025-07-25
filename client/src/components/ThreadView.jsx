@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSocket } from '../stores/socketStore.jsx';
 import { useWorkspace } from '../stores/workspaceStore.jsx';
 import { useQuote } from '../stores/quoteStore.jsx';
+import { escapeHtml, sanitizeUsername } from '../utils/sanitize.js';
 import MessageInput from './MessageInput.jsx';
 import QuotePreview from './QuotePreview.jsx';
 import './ThreadView.css';
@@ -59,11 +60,11 @@ export default function ThreadView({ parentMessage, onClose }) {
         <div className="thread-content">
           <div className="thread-parent">
             <div className="message-avatar">
-              {parentMessage.username[0].toUpperCase()}
+              {sanitizeUsername(parentMessage.username)[0]?.toUpperCase() || '?'}
             </div>
             <div className="message-content">
-              <div className="message-author">{parentMessage.username}</div>
-              <div className="message-text">{parentMessage.content}</div>
+              <div className="message-author">{sanitizeUsername(parentMessage.username)}</div>
+              <div className="message-text">{escapeHtml(parentMessage.content)}</div>
               <div className="message-actions">
                 <button className="reply-btn" onClick={() => handleQuoteMessage(parentMessage)}>
                   quote
@@ -80,11 +81,11 @@ export default function ThreadView({ parentMessage, onClose }) {
             {threadMessages.map(msg => (
               <div key={msg.id} className="thread-message">
                 <div className="message-avatar">
-                  {msg.username[0].toUpperCase()}
+                  {sanitizeUsername(msg.username)[0]?.toUpperCase() || '?'}
                 </div>
                 <div className="message-content">
-                  <div className="message-author">{msg.username}</div>
-                  <div className="message-text">{msg.content}</div>
+                  <div className="message-author">{sanitizeUsername(msg.username)}</div>
+                  <div className="message-text">{escapeHtml(msg.content)}</div>
                   <div className="message-actions">
                     <button className="reply-btn" onClick={() => handleQuoteMessage(msg)}>
                       quote

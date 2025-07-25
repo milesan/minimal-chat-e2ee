@@ -4,6 +4,7 @@ import express from 'express';
 import authRoutes from '../server/api/auth.js';
 import { initializeDatabase } from '../server/db/index.js';
 import db from '../server/db/index.js';
+import { runMigrations } from '../server/db/migrations.js';
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use('/api/auth', authRoutes);
 describe('Authentication API', () => {
   beforeAll(async () => {
     await initializeDatabase();
+    runMigrations();
     // Clean up any existing data
     db.exec('PRAGMA foreign_keys = OFF');
     db.exec(`
@@ -38,21 +40,21 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'testpassword123'
         });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('user');
-      expect(response.body.user.username).toBe('testuser');
+      expect(response.body.user.username).toBe('authtest1');
     });
 
     it('should reject duplicate usernames', async () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'anotherpassword'
         });
 
@@ -78,7 +80,7 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'testpassword123'
         });
 
@@ -91,7 +93,7 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'testuser',
+          username: 'authtest1',
           password: 'wrongpassword'
         });
 

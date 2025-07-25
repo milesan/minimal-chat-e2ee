@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { initializeDatabase } from '../server/db/index.js';
 import { handleSocketConnection } from '../server/websocket/index.js';
 import db from '../server/db/index.js';
+import { runMigrations } from '../server/db/migrations.js';
 
 const JWT_SECRET = 'test-secret';
 
@@ -14,11 +15,12 @@ describe('WebSocket Communication', () => {
   let httpServer;
   let clientSocket;
   let serverSocket;
-  const port = 3035;
+  let port;
   let server;
 
   beforeAll(async () => {
     await initializeDatabase();
+    runMigrations();
     // Clean up any existing data
     db.exec('PRAGMA foreign_keys = OFF');
     db.exec(`
@@ -63,7 +65,10 @@ describe('WebSocket Communication', () => {
     });
 
     await new Promise((resolve) => {
-      httpServer.listen(port, resolve);
+      httpServer.listen(0, () => {
+        port = httpServer.address().port;
+        resolve();
+      });
     });
   });
 

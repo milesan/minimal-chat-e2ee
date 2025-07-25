@@ -3,6 +3,7 @@ import { useSocket } from '../stores/socketStore.jsx';
 import { useQuote } from '../stores/quoteStore.jsx';
 import { useEncryption } from '../stores/encryptionStore.jsx';
 import { CryptoService } from '../services/crypto.js';
+import { escapeHtml, isValidImageUrl, sanitizeUsername } from '../utils/sanitize.js';
 import ThreadView from './ThreadView.jsx';
 import './Message.css';
 
@@ -63,13 +64,13 @@ export default function Message({ message }) {
 
   return (
     <>
-      <article className="message" onClick={handleClick} role="article" aria-label={`Message from ${message.username}`}>
+      <article className="message" onClick={handleClick} role="article" aria-label={`Message from ${sanitizeUsername(message.username)}`}>
         <div className="message-avatar" aria-hidden="true">
-          {message.username[0].toUpperCase()}
+          {sanitizeUsername(message.username)[0]?.toUpperCase() || '?'}
         </div>
         <div className="message-content">
           <div className="message-header">
-            <span className="message-author">{message.username}</span>
+            <span className="message-author">{sanitizeUsername(message.username)}</span>
             <time className="message-time" dateTime={new Date(message.created_at * 1000).toISOString()}>{timeString}</time>
           </div>
           <div className="message-text">
@@ -77,18 +78,18 @@ export default function Message({ message }) {
               if (line.startsWith('> ')) {
                 return (
                   <div key={i} className="quoted-line">
-                    {line.substring(2)}
+                    {escapeHtml(line.substring(2))}
                   </div>
                 );
               }
-              return <div key={i}>{line}</div>;
+              return <div key={i}>{escapeHtml(line)}</div>;
             })}
           </div>
-          {message.image_url && (
+          {message.image_url && isValidImageUrl(message.image_url) && (
             <figure className="message-image">
               <img 
                 src={message.image_url} 
-                alt={`Image shared by ${message.username} at ${timeString}`}
+                alt={`Image shared by ${sanitizeUsername(message.username)} at ${timeString}`}
                 loading="lazy"
               />
             </figure>

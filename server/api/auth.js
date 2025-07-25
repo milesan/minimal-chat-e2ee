@@ -3,9 +3,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db/index.js';
+import { config } from '../config.js';
+import { validateUsername } from '../utils/validation.js';
+import { handleDatabaseError, logError } from '../utils/errorHandler.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = config.JWT_SECRET;
 
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -25,8 +28,14 @@ export const authenticateToken = (req, res, next) => {
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required' });
+  }
+
+  // Validate username
+  const usernameValidation = validateUsername(username);
+  if (!usernameValidation.valid) {
+    return res.status(400).json({ error: usernameValidation.error });
   }
 
   if (password.length < 8) {
@@ -36,17 +45,19 @@ router.post('/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = uuidv4();
+    const validUsername = usernameValidation.value;
 
     const stmt = db.prepare('INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)');
-    stmt.run(userId, username, hashedPassword);
+    stmt.run(userId, validUsername, hashedPassword);
 
-    const token = jwt.sign({ id: userId, username }, JWT_SECRET);
-    res.json({ token, user: { id: userId, username } });
+    const token = jwt.sign({ id: userId, username: validUsername }, JWT_SECRET);
+    res.json({ token, user: { id: userId, username: validUsername } });
   } catch (error) {
-    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (error.code === 'SQLITE_CONSTRAINT' || error.message?.includes('UNIQUE constraint failed')) {
       res.status(409).json({ error: 'Username already exists' });
     } else {
-      res.status(500).json({ error: 'Failed to create user' });
+      logError('auth.register', error);
+      res.status(500).json({ error: 'Failed to create account' });
     }
   }
 });
@@ -54,12 +65,19 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required' });
+  }
+
+  // Validate username
+  const usernameValidation = validateUsername(username);
+  if (!usernameValidation.valid) {
+    return res.status(400).json({ error: usernameValidation.error });
   }
 
   try {
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    const validUsername = usernameValidation.value;
+    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(validUsername);
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -75,6 +93,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
     res.json({ token, user: { id: user.id, username: user.username } });
   } catch (error) {
+    logError('auth.login', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
