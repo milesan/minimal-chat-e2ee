@@ -83,7 +83,7 @@ router.get('/servers', (req, res) => {
 
 router.post('/servers/:serverId/channels', (req, res) => {
   const { serverId } = req.params;
-  const { name, encrypted } = req.body;
+  const { name, encrypted, passwordHint } = req.body;
   const userId = req.user.id;
 
   // Validate channel name
@@ -103,11 +103,17 @@ router.post('/servers/:serverId/channels', (req, res) => {
     const encryptedValue = encrypted ? 1 : 0;
     const encryptedAt = encrypted ? Math.floor(Date.now() / 1000) : null;
     
-    db.prepare('INSERT INTO channels (id, server_id, name, created_by, encrypted, encrypted_at) VALUES (?, ?, ?, ?, ?, ?)').run(
-      channelId, serverId, validName, userId, encryptedValue, encryptedAt
+    db.prepare('INSERT INTO channels (id, server_id, name, created_by, is_encrypted, encrypted_at, password_hint) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      channelId, serverId, validName, userId, encryptedValue, encryptedAt, passwordHint || null
     );
 
-    res.json({ id: channelId, name: validName, server_id: serverId, encrypted: encryptedValue });
+    res.json({ 
+      id: channelId, 
+      name: validName, 
+      server_id: serverId, 
+      is_encrypted: encryptedValue,
+      password_hint: passwordHint || null 
+    });
   } catch (error) {
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       res.status(409).json({ error: 'Channel name already exists' });

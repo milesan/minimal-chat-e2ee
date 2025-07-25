@@ -15,7 +15,7 @@ describe('Voice Calls (WebRTC)', () => {
   let clientSocket1, clientSocket2;
   let port;
   let userId1, userId2;
-  let workspaceId, channelId;
+  let serverId, channelId;
   let authToken1, authToken2;
 
   beforeAll(async () => {
@@ -32,8 +32,8 @@ describe('Voice Calls (WebRTC)', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -49,24 +49,24 @@ describe('Voice Calls (WebRTC)', () => {
       userId2, 'voiceuser2', 'hashedpassword'
     );
 
-    // Create workspace
-    workspaceId = 'voice-workspace-id';
-    db.prepare('INSERT INTO workspaces (id, name, created_by) VALUES (?, ?, ?)').run(
-      workspaceId, 'Voice Test Workspace', userId1
+    // Create server
+    serverId = 'voice-server-id';
+    db.prepare('INSERT INTO servers (id, name, created_by) VALUES (?, ?, ?)').run(
+      serverId, 'Voice Test Server', userId1
     );
 
-    // Add users to workspace
-    db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-      workspaceId, userId1, 'owner'
+    // Add users to server
+    db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+      serverId, userId1, 'owner'
     );
-    db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-      workspaceId, userId2, 'member'
+    db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+      serverId, userId2, 'member'
     );
 
     // Create channel
     channelId = 'voice-channel-id';
-    db.prepare('INSERT INTO channels (id, workspace_id, name, created_by) VALUES (?, ?, ?, ?)').run(
-      channelId, workspaceId, 'voice-general', userId1
+    db.prepare('INSERT INTO channels (id, server_id, name, created_by, is_encrypted) VALUES (?, ?, ?, ?, ?)').run(
+      channelId, serverId, 'voice-general', userId1, 0
     );
 
     // Create auth tokens
@@ -120,10 +120,10 @@ describe('Voice Calls (WebRTC)', () => {
       });
 
       clientSocket1.on('authenticated', () => {
-        clientSocket1.emit('join_workspace', workspaceId);
+        clientSocket1.emit('join_server', serverId);
       });
 
-      clientSocket1.on('joined_workspace', () => {
+      clientSocket1.on('joined_server', () => {
         clientSocket1.emit('join_channel', channelId);
       });
 
@@ -134,10 +134,10 @@ describe('Voice Calls (WebRTC)', () => {
       });
 
       clientSocket2.on('authenticated', () => {
-        clientSocket2.emit('join_workspace', workspaceId);
+        clientSocket2.emit('join_server', serverId);
       });
 
-      clientSocket2.on('joined_workspace', () => {
+      clientSocket2.on('joined_server', () => {
         clientSocket2.emit('join_channel', channelId);
       });
 
@@ -246,10 +246,10 @@ describe('Voice Calls (WebRTC)', () => {
       });
 
       clientSocket1.on('authenticated', () => {
-        clientSocket1.emit('join_workspace', workspaceId);
+        clientSocket1.emit('join_server', serverId);
       });
 
-      clientSocket1.on('joined_workspace', () => {
+      clientSocket1.on('joined_server', () => {
         clientSocket1.emit('join_channel', channelId);
       });
 
@@ -260,10 +260,10 @@ describe('Voice Calls (WebRTC)', () => {
       });
 
       clientSocket2.on('authenticated', () => {
-        clientSocket2.emit('join_workspace', workspaceId);
+        clientSocket2.emit('join_server', serverId);
       });
 
-      clientSocket2.on('joined_workspace', () => {
+      clientSocket2.on('joined_server', () => {
         clientSocket2.emit('join_channel', channelId);
       });
 
@@ -346,10 +346,10 @@ describe('Voice Calls (WebRTC)', () => {
       });
 
       clientSocket1.on('authenticated', () => {
-        clientSocket1.emit('join_workspace', workspaceId);
+        clientSocket1.emit('join_server', serverId);
       });
 
-      clientSocket1.on('joined_workspace', () => {
+      clientSocket1.on('joined_server', () => {
         clientSocket1.emit('join_channel', channelId);
       });
 
@@ -410,9 +410,9 @@ describe('Voice Calls (WebRTC)', () => {
       // Create an ended session
       const endedSessionId = 'ended-session-id';
       db.prepare(`
-        INSERT INTO voice_sessions (id, channel_id, started_by, ended_at)
-        VALUES (?, ?, ?, datetime('now'))
-      `).run(endedSessionId, channelId, userId1);
+        INSERT INTO voice_sessions (id, channel_id, ended_at)
+        VALUES (?, ?, strftime('%s', 'now'))
+      `).run(endedSessionId, channelId);
 
       clientSocket1.on('voice_error', (data) => {
         expect(data.error).toContain('ended');
@@ -425,8 +425,8 @@ describe('Voice Calls (WebRTC)', () => {
     it('should handle multiple concurrent voice calls in different channels', () => {
       // Create another channel
       const channelId2 = 'voice-channel-2';
-      db.prepare('INSERT INTO channels (id, workspace_id, name, created_by) VALUES (?, ?, ?, ?)').run(
-        channelId2, workspaceId, 'voice-meeting', userId1
+      db.prepare('INSERT INTO channels (id, server_id, name, created_by, is_encrypted) VALUES (?, ?, ?, ?, ?)').run(
+        channelId2, serverId, 'voice-meeting', userId1, 0
       );
 
       // Create sessions in both channels

@@ -50,25 +50,31 @@ export const runMigrations = () => {
     // Table might already exist
   }
 
-  // Add workspace settings
+  // Add workspace/server settings
   try {
-    // Check if images_enabled column exists
-    const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
-    const hasImagesEnabled = workspacesTable.some(col => col.name === 'images_enabled');
-    const hasImagesEnabledAt = workspacesTable.some(col => col.name === 'images_enabled_at');
+    // Check if we have workspaces or servers table
+    const hasWorkspacesTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='workspaces'").get();
+    const hasServersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").get();
     
-    if (!hasImagesEnabled) {
-      db.exec(`
-        ALTER TABLE workspaces ADD COLUMN images_enabled INTEGER DEFAULT 0;
-      `);
-      logMigration('Added images_enabled column to workspaces table');
-    }
-    
-    if (!hasImagesEnabledAt) {
-      db.exec(`
-        ALTER TABLE workspaces ADD COLUMN images_enabled_at INTEGER;
-      `);
-      logMigration('Added images_enabled_at column to workspaces table');
+    if (hasWorkspacesTable) {
+      // Check if images_enabled column exists
+      const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
+      const hasImagesEnabled = workspacesTable.some(col => col.name === 'images_enabled');
+      const hasImagesEnabledAt = workspacesTable.some(col => col.name === 'images_enabled_at');
+      
+      if (!hasImagesEnabled) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN images_enabled INTEGER DEFAULT 0;
+        `);
+        logMigration('Added images_enabled column to workspaces table');
+      }
+      
+      if (!hasImagesEnabledAt) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN images_enabled_at INTEGER;
+        `);
+        logMigration('Added images_enabled_at column to workspaces table');
+      }
     }
 
     // Check if image_url column exists in messages
@@ -188,7 +194,7 @@ export const runMigrations = () => {
       db.exec(`
         ALTER TABLE voice_sessions ADD COLUMN started_by TEXT;
       `);
-      console.log('Added started_by column to voice_sessions table');
+      logMigration('Added started_by column to voice_sessions table');
     }
   } catch (e) {
     console.error('Voice sessions migration error:', e);
@@ -229,25 +235,31 @@ export const runMigrations = () => {
     // Table might already exist
   }
 
-  // Add workspace visibility and invitation system
+  // Add workspace/server visibility and invitation system
   try {
-    // Add visibility column to workspaces
-    const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
-    const hasVisibility = workspacesTable.some(col => col.name === 'visibility');
-    const hasDescription = workspacesTable.some(col => col.name === 'description');
+    // Check if we're dealing with workspaces or servers table
+    const hasWorkspacesTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='workspaces'").get();
+    const hasServersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").get();
     
-    if (!hasVisibility) {
-      db.exec(`
-        ALTER TABLE workspaces ADD COLUMN visibility TEXT DEFAULT 'private' CHECK (visibility IN ('public', 'private'));
-      `);
-      logMigration('Added visibility column to workspaces table');
-    }
-    
-    if (!hasDescription) {
-      db.exec(`
-        ALTER TABLE workspaces ADD COLUMN description TEXT;
-      `);
-      logMigration('Added description column to workspaces table');
+    if (hasWorkspacesTable) {
+      // Legacy migration for workspaces table (before rename to servers)
+      const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
+      const hasVisibility = workspacesTable.some(col => col.name === 'visibility');
+      const hasDescription = workspacesTable.some(col => col.name === 'description');
+      
+      if (!hasVisibility) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN visibility TEXT DEFAULT 'private' CHECK (visibility IN ('public', 'private'));
+        `);
+        logMigration('Added visibility column to workspaces table');
+      }
+      
+      if (!hasDescription) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN description TEXT;
+        `);
+        logMigration('Added description column to workspaces table');
+      }
     }
 
     // Create invitations table

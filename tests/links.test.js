@@ -15,7 +15,7 @@ app.use('/api/links', linksRoutes);
 describe('Link Aggregation and Voting', () => {
   let authToken1, authToken2;
   let userId1, userId2;
-  let workspaceId;
+  let serverId;
   let linkId;
 
   beforeAll(async () => {
@@ -32,8 +32,8 @@ describe('Link Aggregation and Voting', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -59,17 +59,17 @@ describe('Link Aggregation and Voting', () => {
     authToken2 = user2Response.body.token;
     userId2 = user2Response.body.user.id;
 
-    // Create a workspace and add both users
-    db.prepare('INSERT INTO workspaces (id, name, created_by) VALUES (?, ?, ?)').run(
-      'links-workspace-id', 'Links Test Workspace', userId1
+    // Create a server and add both users
+    db.prepare('INSERT INTO servers (id, name, created_by) VALUES (?, ?, ?)').run(
+      'links-server-id', 'Links Test Server', userId1
     );
-    workspaceId = 'links-workspace-id';
+    serverId = 'links-server-id';
 
-    db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-      workspaceId, userId1, 'owner'
+    db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+      serverId, userId1, 'owner'
     );
-    db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-      workspaceId, userId2, 'member'
+    db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+      serverId, userId2, 'member'
     );
   });
 
@@ -77,10 +77,10 @@ describe('Link Aggregation and Voting', () => {
     // Don't close db as it's shared
   });
 
-  describe('POST /api/links/workspaces/:workspaceId/links', () => {
+  describe('POST /api/links/servers/:serverId/links', () => {
     it('should create a new link', async () => {
       const response = await request(app)
-        .post(`/api/links/workspaces/${workspaceId}/links`)
+        .post(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken1}`)
         .send({
           url: 'https://example.com/article',
@@ -96,10 +96,10 @@ describe('Link Aggregation and Voting', () => {
       linkId = response.body.id;
     });
 
-    it('should allow duplicate URLs in same workspace', async () => {
+    it('should allow duplicate URLs in same server', async () => {
       // The current API doesn't prevent duplicate URLs
       const response = await request(app)
-        .post(`/api/links/workspaces/${workspaceId}/links`)
+        .post(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken2}`)
         .send({
           url: 'https://example.com/article',
@@ -111,7 +111,7 @@ describe('Link Aggregation and Voting', () => {
 
     it('should require authentication', async () => {
       const response = await request(app)
-        .post(`/api/links/workspaces/${workspaceId}/links`)
+        .post(`/api/links/servers/${serverId}/links`)
         .send({
           url: 'https://example.com/another',
           title: 'No Auth'
@@ -121,10 +121,10 @@ describe('Link Aggregation and Voting', () => {
     });
   });
 
-  describe('GET /api/links/workspaces/:workspaceId/links', () => {
-    it('should retrieve workspace links', async () => {
+  describe('GET /api/links/servers/:serverId/links', () => {
+    it('should retrieve server links', async () => {
       const response = await request(app)
-        .get(`/api/links/workspaces/${workspaceId}/links`)
+        .get(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken1}`);
 
       expect(response.status).toBe(200);
@@ -143,7 +143,7 @@ describe('Link Aggregation and Voting', () => {
     it('should sort links by creation date', async () => {
       // Create additional links
       await request(app)
-        .post(`/api/links/workspaces/${workspaceId}/links`)
+        .post(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken1}`)
         .send({
           url: 'https://example.com/newer',
@@ -151,7 +151,7 @@ describe('Link Aggregation and Voting', () => {
         });
 
       const response = await request(app)
-        .get(`/api/links/workspaces/${workspaceId}/links`)
+        .get(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken1}`);
 
       // Verify links are sorted by created_at (descending)
@@ -257,7 +257,7 @@ describe('Link Aggregation and Voting', () => {
 
     it('should update comment count', async () => {
       const response = await request(app)
-        .get(`/api/links/workspaces/${workspaceId}/links`)
+        .get(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken1}`);
 
       const link = response.body.find(l => l.id === linkId);
@@ -266,8 +266,8 @@ describe('Link Aggregation and Voting', () => {
   });
 
   describe('Link Permissions', () => {
-    it('should only allow workspace members to view links', async () => {
-      // Create a third user not in workspace
+    it('should only allow server members to view links', async () => {
+      // Create a third user not in server
       const user3Response = await request(app)
         .post('/api/auth/register')
         .send({
@@ -278,16 +278,16 @@ describe('Link Aggregation and Voting', () => {
       const authToken3 = user3Response.body.token;
 
       const response = await request(app)
-        .get(`/api/links/workspaces/${workspaceId}/links`)
+        .get(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken3}`);
 
       expect(response.status).toBe(403);
     });
 
-    it('should allow link operations for workspace members', async () => {
+    it('should allow link operations for server members', async () => {
       // Verify both users can create links
       const createResponse = await request(app)
-        .post(`/api/links/workspaces/${workspaceId}/links`)
+        .post(`/api/links/servers/${serverId}/links`)
         .set('Authorization', `Bearer ${authToken1}`)
         .send({
           url: 'https://example.com/test-permissions',
