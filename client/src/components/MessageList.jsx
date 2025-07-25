@@ -5,8 +5,10 @@ import './MessageList.css';
 export default function MessageList({ messages }) {
   if (messages.length === 0) {
     return (
-      <div className="empty-messages">
-        be the first to say something
+      <div className="empty-state">
+        <div className="empty-state-icon">💬</div>
+        <div className="empty-state-title">No messages yet</div>
+        <div className="empty-state-description">be the first to say something</div>
       </div>
     );
   }

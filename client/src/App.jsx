@@ -37,6 +37,13 @@ function AppContent() {
       <WorkspaceProvider>
         <QuoteProvider>
           <EncryptionProvider>
+            <div className="mobile-blocker">
+              <div className="mobile-blocker-content">
+                <div className="mobile-blocker-icon">💻</div>
+                <div className="mobile-blocker-message">use it on desktop, noob &lt;3</div>
+                <div className="mobile-blocker-submessage">This app is optimized for desktop experience only</div>
+              </div>
+            </div>
             <div className="container">
               {user ? <ChatView /> : <AuthView />}
               <ThemeToggle />
