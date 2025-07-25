@@ -21,15 +21,37 @@ const app = express();
 // Disable X-Powered-By header
 app.disable('x-powered-by');
 
+// CORS configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    // In production, be more permissive if CLIENT_URL is not set
+    if (config.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
+      // Allow all origins in production if CLIENT_URL is not set
+      // This is temporary - you should set CLIENT_URL in production
+      console.warn('CLIENT_URL not set in production - allowing all origins. This is insecure!');
+      return callback(null, true);
+    }
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in the allowed list
+    if (config.ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400 // Cache preflight for 24 hours
+};
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: {
-    origin: config.CLIENT_URL,
-    credentials: true,
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Authorization'],
-    maxAge: 86400
-  },
+  cors: corsOptions,
   transports: ['websocket', 'polling'],
   pingTimeout: 30000,
   pingInterval: 25000,
@@ -77,13 +99,7 @@ app.use(helmet({
   xssFilter: true,
   referrerPolicy: { policy: 'same-origin' }
 }));
-app.use(cors({
-  origin: config.CLIENT_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400 // Cache preflight for 24 hours
-}));
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));

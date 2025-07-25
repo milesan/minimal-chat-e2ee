@@ -36,5 +36,6 @@ export const config = {
   JWT_SECRET: process.env.JWT_SECRET,
   PORT: parseInt(process.env.PORT) || 3035,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3033',
-  NODE_ENV: process.env.NODE_ENV || 'development'
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [process.env.CLIENT_URL || 'http://localhost:3033']
 };
