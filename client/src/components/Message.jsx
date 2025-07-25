@@ -63,14 +63,14 @@ export default function Message({ message }) {
 
   return (
     <>
-      <div className="message" onClick={handleClick}>
-        <div className="message-avatar">
+      <article className="message" onClick={handleClick} role="article" aria-label={`Message from ${message.username}`}>
+        <div className="message-avatar" aria-hidden="true">
           {message.username[0].toUpperCase()}
         </div>
         <div className="message-content">
           <div className="message-header">
             <span className="message-author">{message.username}</span>
-            <span className="message-time">{timeString}</span>
+            <time className="message-time" dateTime={new Date(message.created_at * 1000).toISOString()}>{timeString}</time>
           </div>
           <div className="message-text">
             {displayContent.split('\n').map((line, i) => {
@@ -85,9 +85,13 @@ export default function Message({ message }) {
             })}
           </div>
           {message.image_url && (
-            <div className="message-image">
-              <img src={message.image_url} alt="Uploaded image" />
-            </div>
+            <figure className="message-image">
+              <img 
+                src={message.image_url} 
+                alt={`Image shared by ${message.username} at ${timeString}`}
+                loading="lazy"
+              />
+            </figure>
           )}
           {message.thread_count > 0 && (
             <div className="thread-info">
@@ -96,15 +100,23 @@ export default function Message({ message }) {
             </div>
           )}
           <div className="message-actions">
-            <button className="reply-btn" onClick={handleQuote}>
+            <button 
+              className="btn btn-sm btn-ghost" 
+              onClick={handleQuote}
+              aria-label="Quote this message"
+            >
               quote
             </button>
-            <button className="reply-btn" onClick={handleReply}>
+            <button 
+              className="btn btn-sm btn-ghost" 
+              onClick={handleReply}
+              aria-label={`Open thread for this message (${message.thread_count || 0} replies)`}
+            >
               thread
             </button>
           </div>
         </div>
-      </div>
+      </article>
 
       {showThread && (
         <ThreadView

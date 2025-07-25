@@ -1,73 +1,51 @@
 .sidebar-header {
-  padding: 8px;
+  padding: var(--space-sm);
   border-bottom: 1px solid var(--border);
 }
 
 .workspace-selector {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .workspace-dropdown {
   flex: 1;
-  padding: 4px 8px;
+  padding: var(--space-xs) var(--space-sm);
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-radius: var(--radius);
+  transition: all var(--transition-fast);
 }
 
-.add-workspace-btn {
-  width: 24px;
-  height: 24px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: none;
-  border: 1px solid var(--border);
+.workspace-dropdown:hover {
+  border-color: var(--text-tertiary);
 }
 
-.add-workspace-btn:hover {
-  background: var(--border);
-  color: var(--text-primary);
+.workspace-dropdown:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--accent);
 }
 
-.settings-btn {
-  width: 24px;
-  height: 24px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: none;
-  border: 1px solid var(--border);
-}
-
-.settings-btn:hover {
-  background: var(--border);
-  color: var(--text-primary);
-}
+/* Button styles removed - using global button classes */
 
 .view-selector {
   display: flex;
-  padding: 0 8px;
+  padding: 0 var(--space-sm);
   gap: 0;
   border-bottom: 1px solid var(--border);
 }
 
 .view-btn {
   flex: 1;
-  padding: 6px 0;
-  font-size: 11px;
+  padding: var(--space-sm) 0;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -75,17 +53,25 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  transition: none;
+  transition: all var(--transition-fast);
   text-align: center;
+  border-radius: 0;
 }
 
 .view-btn:hover {
   color: var(--text-primary);
+  background: var(--bg-tertiary);
 }
 
 .view-btn.active {
   color: var(--text-primary);
   border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.view-btn:focus-visible {
+  box-shadow: inset var(--focus-ring);
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .channels-section, .links-section {
@@ -94,8 +80,8 @@
 }
 
 .links-header {
-  padding: 8px;
-  font-size: 11px;
+  padding: var(--space-sm);
+  font-size: var(--font-size-xs);
   font-weight: 500;
   text-transform: uppercase;
   color: var(--text-secondary);
@@ -103,70 +89,57 @@
 }
 
 .channels-header {
-  padding: 8px;
+  padding: var(--space-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   text-transform: uppercase;
   color: var(--text-secondary);
   letter-spacing: 0.5px;
 }
 
-.add-channel-btn {
-  width: 20px;
-  height: 20px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: none;
-  border: 1px solid transparent;
-}
-
-.add-channel-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
+/* Button styles removed - using global button classes */
 
 .channels-list {
-  padding: 0 8px 16px;
+  padding: 0 var(--space-sm) var(--space-lg);
 }
 
 .empty-channels {
-  padding: 24px 12px;
+  padding: var(--space-xl) var(--space-md);
   text-align: center;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-tertiary);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-xs);
 }
 
 .empty-channels-hint {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   opacity: 0.6;
 }
 
 .channel-item {
   width: 100%;
-  padding: 4px 8px;
+  padding: var(--space-xs) var(--space-sm);
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
-  transition: none;
+  transition: all var(--transition-fast);
   text-align: left;
   border: 1px solid transparent;
+  border-radius: var(--radius);
+  margin-bottom: 2px;
 }
 
 .channel-item:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 .channel-item.active {
@@ -188,27 +161,28 @@
 }
 
 .sidebar-footer {
-  padding: 8px;
+  padding: var(--space-sm);
   border-top: 1px solid var(--border);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .user-avatar {
-  width: 24px;
-  height: 24px;
+  width: var(--space-xl);
+  height: var(--space-xl);
   background: var(--accent);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
+  border-radius: var(--radius);
 }
 
 .user-details {
@@ -217,15 +191,18 @@
 
 .user-name {
   font-weight: 500;
-  font-size: 12px;
-  line-height: 1.2;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
 }
 
 .logout-btn {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
-  transition: none;
-  line-height: 1.2;
+  transition: color var(--transition-fast);
+  line-height: var(--line-height-tight);
+  padding: 0;
+  background: none;
+  border: none;
 }
 
 .logout-btn:hover {
@@ -249,20 +226,21 @@
 .modal {
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  padding: 24px;
+  padding: var(--space-xl);
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius);
 }
 
 .modal h2 {
-  margin-bottom: 16px;
-  font-size: 20px;
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-xl);
 }
 
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-md);
   justify-content: flex-end;
-  margin-top: 24px;
+  margin-top: var(--space-xl);
 }
