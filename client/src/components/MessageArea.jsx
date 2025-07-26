@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useSocket } from '../stores/socketStore.jsx';
 import { useQuote } from '../stores/quoteStore.jsx';
 import { useEncryption } from '../stores/encryptionStore.jsx';
@@ -12,7 +12,7 @@ import EncryptionModal from './EncryptionModal.jsx';
 import './MessageArea.css';
 
 export default function MessageArea() {
-  const { currentChannel, messages, sendMessage } = useWorkspace();
+  const { currentChannel, messages, sendMessage } = useServer();
   const socket = useSocket();
   const { quotedMessage, clearQuote } = useQuote();
   const { getPassword, setPassword } = useEncryption();

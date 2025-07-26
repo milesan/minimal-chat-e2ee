@@ -97,7 +97,7 @@ export default function InvitationManager({ serverId }) {
 
   return (
     <div className="invitation-manager">
-      <h3>Server Invitations</h3>
+      <h3>Realm Invitations</h3>
       
       <div className="create-invitation-section">
         <h4>Create New Invitation</h4>

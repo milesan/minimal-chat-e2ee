@@ -1,4 +1,4 @@
-.find-server-view {
+.find-realm-view {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -14,7 +14,7 @@
   z-index: 1000;
 }
 
-.find-server-header {
+.find-realm-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,7 +22,7 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-.find-server-header h2 {
+.find-realm-header h2 {
   margin: 0;
   font-size: 1.5rem;
   color: var(--text-primary);
@@ -48,7 +48,7 @@
   background: var(--bg-secondary);
 }
 
-.find-server-content {
+.find-realm-content {
   padding: 20px;
   overflow-y: auto;
   flex: 1;
@@ -128,7 +128,7 @@
   font-size: 14px;
 }
 
-.public-servers-section h3 {
+.public-realms-section h3 {
   margin: 0 0 16px 0;
   font-size: 1.1rem;
   color: var(--text-primary);
@@ -141,13 +141,13 @@
   color: var(--text-secondary);
 }
 
-.public-servers-list {
+.public-realms-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.public-server-item {
+.public-realm-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -158,22 +158,22 @@
   transition: border-color 0.2s;
 }
 
-.public-server-item:hover {
+.public-realm-item:hover {
   border-color: var(--accent-color);
 }
 
-.server-info {
+.realm-info {
   flex: 1;
   min-width: 0;
 }
 
-.server-info h4 {
+.realm-info h4 {
   margin: 0 0 4px 0;
   font-size: 16px;
   color: var(--text-primary);
 }
 
-.server-description {
+.realm-description {
   margin: 4px 0 8px 0;
   color: var(--text-secondary);
   font-size: 14px;
@@ -226,7 +226,7 @@
 }
 
 /* Dark theme support */
-[data-theme="dark"] .find-server-view {
+[data-theme="dark"] .find-realm-view {
   --bg-primary: #1a1a1a;
   --bg-secondary: #2a2a2a;
   --text-primary: #ffffff;

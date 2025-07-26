@@ -10,7 +10,7 @@ const JWT_SECRET = config.JWT_SECRET;
 
 export const handleSocketConnection = (io, socket) => {
   let userId = null;
-  let currentWorkspace = null;
+  let currentServer = null;
   let currentChannel = null;
 
   socket.on('authenticate', (token) => {
@@ -28,31 +28,31 @@ export const handleSocketConnection = (io, socket) => {
     }
   });
 
-  socket.on('join_workspace', applyRateLimit(socket, 'join_workspace', (workspaceId) => {
+  socket.on('join_server', applyRateLimit(socket, 'join_server', (serverId) => {
     if (!userId) {
       return socket.emit('error', { error: 'Not authenticated' });
     }
 
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(workspaceId, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(serverId, userId);
     if (!member) {
-      return socket.emit('error', { error: 'Not a workspace member' });
+      return socket.emit('error', { error: 'Not a server member' });
     }
 
-    if (currentWorkspace) {
-      socket.leave(`workspace:${currentWorkspace}`);
+    if (currentServer) {
+      socket.leave(`server:${currentServer}`);
     }
 
-    currentWorkspace = workspaceId;
-    socket.join(`workspace:${workspaceId}`);
-    socket.emit('joined_workspace', { workspaceId });
+    currentServer = serverId;
+    socket.join(`server:${serverId}`);
+    socket.emit('joined_server', { serverId });
   }));
 
   socket.on('join_channel', applyRateLimit(socket, 'join_channel', (channelId) => {
-    if (!userId || !currentWorkspace) {
-      return socket.emit('error', { error: 'Not in workspace' });
+    if (!userId || !currentServer) {
+      return socket.emit('error', { error: 'Not in server' });
     }
 
-    const channel = db.prepare('SELECT * FROM channels WHERE id = ? AND workspace_id = ?').get(channelId, currentWorkspace);
+    const channel = db.prepare('SELECT * FROM channels WHERE id = ? AND server_id = ?').get(channelId, currentServer);
     if (!channel) {
       return socket.emit('error', { error: 'Channel not found' });
     }

@@ -40,11 +40,11 @@ describe('Socket Rate Limiter', () => {
     }
     expect(socketRateLimiter.checkLimit(userId, 'typing')).toBe(true);
     
-    // Join workspace has lower limit (10 per minute)
+    // Join server has lower limit (10 per minute)
     for (let i = 0; i < 10; i++) {
-      expect(socketRateLimiter.checkLimit(userId, 'join_workspace')).toBe(false);
+      expect(socketRateLimiter.checkLimit(userId, 'join_server')).toBe(false);
     }
-    expect(socketRateLimiter.checkLimit(userId, 'join_workspace')).toBe(true);
+    expect(socketRateLimiter.checkLimit(userId, 'join_server')).toBe(true);
   });
 
   it('should track different users separately', () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../stores/socketStore.jsx';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useQuote } from '../stores/quoteStore.jsx';
 import { escapeHtml, sanitizeUsername } from '../utils/sanitize.js';
 import MessageInput from './MessageInput.jsx';
@@ -9,7 +9,7 @@ import './ThreadView.css';
 
 export default function ThreadView({ parentMessage, onClose }) {
   const socket = useSocket();
-  const { sendMessage } = useWorkspace();
+  const { sendMessage } = useServer();
   const { quotedMessage, quoteMessage, clearQuote } = useQuote();
   const [threadMessages, setThreadMessages] = useState([]);
 

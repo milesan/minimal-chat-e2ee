@@ -3,13 +3,13 @@
   border-bottom: 1px solid var(--border);
 }
 
-.server-selector {
+.realm-selector {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
 }
 
-.server-dropdown {
+.realm-dropdown {
   flex: 1;
   padding: var(--space-xs) var(--space-sm);
   background: var(--bg-primary);
@@ -24,11 +24,11 @@
   color: var(--text-primary);
 }
 
-.server-dropdown:hover {
+.realm-dropdown:hover {
   border-color: var(--text-tertiary);
 }
 
-.server-dropdown:focus {
+.realm-dropdown:focus {
   outline: none;
   box-shadow: var(--focus-ring);
   border-color: var(--accent);

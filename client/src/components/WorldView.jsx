@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useAuth } from '../stores/authStore.jsx';
 import './WorldView.css';
 
 export default function WorldView({ onViewChange }) {
-  const { currentWorkspace, channels, messages, setCurrentChannel } = useWorkspace();
+  const { currentServer, channels, messages, setCurrentChannel } = useServer();
   const { token } = useAuth();
   const [worldMessages, setWorldMessages] = useState([]);
 
   useEffect(() => {
-    if (currentWorkspace && channels.length > 0) {
+    if (currentServer && channels.length > 0) {
       // Collect all messages from all channels
       const allMessages = [];
       
@@ -32,7 +32,7 @@ export default function WorldView({ onViewChange }) {
       // Take top 100 messages
       setWorldMessages(allMessages.slice(0, 100));
     }
-  }, [currentWorkspace, channels, messages]);
+  }, [currentServer, channels, messages]);
 
   const handleMessageClick = (message) => {
     // Find and set the channel
@@ -68,7 +68,7 @@ export default function WorldView({ onViewChange }) {
     <div className="world-view">
       <div className="world-header">
         <h2>world</h2>
-        <span className="world-subtitle">all recent posts across {currentWorkspace?.name || 'realm'}</span>
+        <span className="world-subtitle">all recent posts across {currentServer?.name || 'realm'}</span>
       </div>
 
       <div className="world-content">

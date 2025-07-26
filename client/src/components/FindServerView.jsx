@@ -20,18 +20,18 @@ export default function FindServerView({ onClose }) {
 
   const fetchPublicServers = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/channels/servers/public'), {
+      const response = await fetch(getApiUrl('/api/servers/public'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch public servers');
+        throw new Error('Failed to fetch public realms');
       }
       
       const data = await response.json();
       setPublicServers(data);
     } catch (error) {
-      setError('Failed to load public servers');
+      setError('Failed to load public realms');
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ export default function FindServerView({ onClose }) {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl(`/api/channels/servers/${serverId}/join`), {
+      const response = await fetch(getApiUrl(`/api/servers/${serverId}/join`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -50,7 +50,7 @@ export default function FindServerView({ onClose }) {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to join server');
+        throw new Error(data.error || 'Failed to join realm');
       }
       
       await fetchServers();
@@ -70,7 +70,7 @@ export default function FindServerView({ onClose }) {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('/api/channels/servers/join-by-code'), {
+      const response = await fetch(getApiUrl('/api/servers/join-by-code'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -85,7 +85,7 @@ export default function FindServerView({ onClose }) {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to join server');
+        throw new Error(data.error || 'Failed to join realm');
       }
       
       await fetchServers();
@@ -98,13 +98,13 @@ export default function FindServerView({ onClose }) {
   };
 
   return (
-    <div className="find-server-view">
-      <div className="find-server-header">
-        <h2>Find Servers</h2>
+    <div className="find-realm-view">
+      <div className="find-realm-header">
+        <h2>Find Realms</h2>
         <button className="close-button" onClick={onClose}>×</button>
       </div>
 
-      <div className="find-server-content">
+      <div className="find-realm-content">
         <div className="invite-code-section">
           <h3>Join with Invite Code</h3>
           <form onSubmit={joinByInviteCode}>
@@ -131,7 +131,7 @@ export default function FindServerView({ onClose }) {
             </div>
             {error && error.includes('encryption key') && (
               <p className="encryption-hint">
-                This server is encrypted. Ask the server admin for the encryption key.
+                This realm is encrypted. Ask the realm admin for the encryption key.
               </p>
             )}
           </form>
@@ -141,26 +141,26 @@ export default function FindServerView({ onClose }) {
           <span>or</span>
         </div>
 
-        <div className="public-servers-section">
-          <h3>Public Servers</h3>
+        <div className="public-realms-section">
+          <h3>Public Realms</h3>
           
           {loading ? (
-            <div className="loading">Loading public servers...</div>
+            <div className="loading">Loading public realms...</div>
           ) : publicServers.length === 0 ? (
-            <div className="empty-state">No public servers available</div>
+            <div className="empty-state">No public realms available</div>
           ) : (
-            <div className="public-servers-list">
-              {publicServers.map(server => (
-                <div key={server.id} className="public-server-item">
-                  <div className="server-info">
-                    <h4>{server.name}</h4>
-                    {server.description && (
-                      <p className="server-description">{server.description}</p>
+            <div className="public-realms-list">
+              {publicServers.map(realm => (
+                <div key={realm.id} className="public-realm-item">
+                  <div className="realm-info">
+                    <h4>{realm.name}</h4>
+                    {realm.description && (
+                      <p className="realm-description">{realm.description}</p>
                     )}
-                    <span className="member-count">{server.member_count} members</span>
+                    <span className="member-count">{realm.member_count} members</span>
                   </div>
                   <button
-                    onClick={() => joinPublicServer(server.id)}
+                    onClick={() => joinPublicServer(realm.id)}
                     disabled={joining}
                     className="join-button"
                   >
