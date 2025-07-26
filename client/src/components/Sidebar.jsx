@@ -87,18 +87,18 @@ export default function Sidebar({ view, setView }) {
   return (
     <aside className="sidebar" role="navigation" aria-label="Main navigation">
       <div className="sidebar-header">
-        <div className="server-selector">
+        <div className="realm-selector">
           <select
-            className="server-dropdown"
+            className="realm-dropdown"
             value={currentServer?.id || ''}
             onChange={(e) => {
               const server = servers.find(w => w.id === e.target.value);
               setCurrentServer(server);
             }}
-            aria-label="Select server"
+            aria-label="Select realm"
           >
             {servers.length === 0 ? (
-              <option value="">no servers</option>
+              <option value="">no realms</option>
             ) : (
               servers.map(server => (
                 <option key={server.id} value={server.id}>
@@ -110,16 +110,16 @@ export default function Sidebar({ view, setView }) {
           <button 
             className="btn btn-icon btn-sm btn-ghost"
             onClick={() => setShowServerModal(true)}
-            aria-label="Create new server"
-            title="Create server"
+            aria-label="Create new realm"
+            title="Create realm"
           >
             <span aria-hidden="true">+</span>
           </button>
           <button 
             className="btn btn-icon btn-sm btn-ghost"
             onClick={() => setShowFindServer(true)}
-            aria-label="Find servers"
-            title="Find servers"
+            aria-label="Find realms"
+            title="Find realms"
           >
             <span aria-hidden="true">🔍</span>
           </button>
@@ -127,8 +127,8 @@ export default function Sidebar({ view, setView }) {
             <button 
               className="btn btn-icon btn-sm btn-ghost"
               onClick={() => setShowSettings(true)}
-              aria-label="Server settings"
-              title="Server settings"
+              aria-label="Realm settings"
+              title="Realm settings"
             >
               <span aria-hidden="true">⚙</span>
             </button>
@@ -259,7 +259,7 @@ export default function Sidebar({ view, setView }) {
           setServerError('');
         }} role="dialog" aria-modal="true" aria-labelledby="server-modal-title">
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2 id="server-modal-title">Create Server</h2>
+            <h2 id="server-modal-title">Create Realm</h2>
             <form onSubmit={handleCreateServer}>
               <div className="input-group">
                 <input
@@ -275,7 +275,7 @@ export default function Sidebar({ view, setView }) {
                   aria-describedby={serverError ? 'server-error' : undefined}
                   aria-invalid={!!serverError}
                 />
-                <label htmlFor="server-name" className="input-label">Server name</label>
+                <label htmlFor="server-name" className="input-label">Realm name</label>
               </div>
               <div className="checkbox-group">
                 <input
@@ -286,8 +286,8 @@ export default function Sidebar({ view, setView }) {
                   disabled={serverLoading}
                 />
                 <label htmlFor="server-encrypted">
-                  Create encrypted server
-                  <span className="checkbox-hint">Server data will be end-to-end encrypted</span>
+                  Create encrypted realm
+                  <span className="checkbox-hint">Realm data will be end-to-end encrypted</span>
                 </label>
               </div>
               {serverError && (
@@ -420,12 +420,12 @@ export default function Sidebar({ view, setView }) {
       {showServerKeyModal && newServerKey && (
         <div className="modal-overlay" onClick={() => setShowServerKeyModal(false)} role="dialog" aria-modal="true">
           <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
-            <h2>Server Encryption Key</h2>
+            <h2>Realm Encryption Key</h2>
             <div className="encryption-key-warning">
               <span className="warning-icon" aria-hidden="true">⚠️</span>
               <p>
                 <strong>Save this encryption key immediately!</strong> 
-                You'll need it to share with others when inviting them to this server.
+                You'll need it to share with others when inviting them to this realm.
               </p>
             </div>
             <div className="encryption-key-display">
@@ -442,7 +442,7 @@ export default function Sidebar({ view, setView }) {
               </button>
             </div>
             <p className="encryption-key-note">
-              This key is required along with an invitation code for others to join your encrypted server.
+              This key is required along with an invitation code for others to join your encrypted realm.
               Store it securely - it cannot be recovered if lost!
             </p>
             <div className="modal-actions">

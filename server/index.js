@@ -145,19 +145,24 @@ console.log('Starting server with configuration:', {
   JWT_SECRET_LENGTH: config.JWT_SECRET ? config.JWT_SECRET.length : 0
 });
 
-initializeDatabase().then(() => {
-  console.log('Database initialized successfully');
-  runMigrations();
-  console.log('Migrations completed');
-  httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Health check available at: http://0.0.0.0:${PORT}/health`);
+// Don't start server automatically in test environment
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+  initializeDatabase().then(() => {
+    console.log('Database initialized successfully');
+    runMigrations();
+    console.log('Migrations completed');
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Health check available at: http://0.0.0.0:${PORT}/health`);
+    });
+  }).catch(err => {
+    // Log error internally but don't expose details
+    console.error('Failed to initialize database:', err.message);
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+      console.error('Error details:', err);
+    }
+    process.exit(1);
   });
-}).catch(err => {
-  // Log error internally but don't expose details
-  console.error('Failed to initialize database:', err.message);
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-    console.error('Error details:', err);
-  }
-  process.exit(1);
-});
+}
+
+export default app;

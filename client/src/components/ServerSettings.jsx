@@ -88,11 +88,11 @@ export default function ServerSettings({ onClose }) {
       <div className="settings-overlay" onClick={onClose}>
         <div className="settings-modal" onClick={e => e.stopPropagation()}>
           <div className="settings-header">
-            <h2>server settings</h2>
+            <h2>realm settings</h2>
             <button className="close-btn" onClick={onClose}>×</button>
           </div>
           <div className="settings-content">
-            <p className="settings-error">only server owners can modify settings</p>
+            <p className="settings-error">only realm owners can modify settings</p>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function ServerSettings({ onClose }) {
     <div className="settings-overlay" onClick={onClose}>
       <div className="settings-modal" onClick={e => e.stopPropagation()}>
         <div className="settings-header">
-          <h2>server settings</h2>
+          <h2>realm settings</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
@@ -112,7 +112,7 @@ export default function ServerSettings({ onClose }) {
             <h3>general</h3>
             
             <div className="form-group">
-              <label htmlFor="server-name">server name</label>
+              <label htmlFor="server-name">realm name</label>
               <input
                 id="server-name"
                 type="text"
@@ -131,7 +131,7 @@ export default function ServerSettings({ onClose }) {
                 rows="3"
                 value={serverDescription}
                 onChange={(e) => setServerDescription(e.target.value)}
-                placeholder="Tell people what this server is about"
+                placeholder="Tell people what this realm is about"
               />
             </div>
             

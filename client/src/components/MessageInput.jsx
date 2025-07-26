@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSocket } from '../stores/socketStore.jsx';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useAuth } from '../stores/authStore.jsx';
 import './MessageInput.css';
 

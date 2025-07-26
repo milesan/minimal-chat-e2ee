@@ -6,6 +6,38 @@ import { validateName, validateImageData } from '../utils/validation.js';
 
 const router = express.Router();
 
+// Get image - no auth required for viewing images
+router.get('/:serverId/images/:imageId', (req, res) => {
+  const { serverId, imageId } = req.params;
+
+  try {
+    const image = db.prepare('SELECT data FROM images WHERE id = ? AND server_id = ?').get(imageId, serverId);
+    
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Convert base64 to buffer and send
+    const matches = image.data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      const contentType = matches[1];
+      const data = matches[2];
+      const img = Buffer.from(data, 'base64');
+      
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Length': img.length
+      });
+      res.end(img);
+    } else {
+      res.status(400).json({ error: 'Invalid image data' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch image' });
+  }
+});
+
+// Apply authentication to all other routes
 router.use(authenticateToken);
 
 // Get server settings
@@ -139,37 +171,6 @@ router.post('/:serverId/upload', (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to upload image' });
-  }
-});
-
-// Get image
-router.get('/:serverId/images/:imageId', (req, res) => {
-  const { serverId, imageId } = req.params;
-
-  try {
-    const image = db.prepare('SELECT data FROM images WHERE id = ? AND server_id = ?').get(imageId, serverId);
-    
-    if (!image) {
-      return res.status(404).json({ error: 'Image not found' });
-    }
-
-    // Convert base64 to buffer and send
-    const matches = image.data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (matches && matches.length === 3) {
-      const contentType = matches[1];
-      const data = matches[2];
-      const img = Buffer.from(data, 'base64');
-      
-      res.writeHead(200, {
-        'Content-Type': contentType,
-        'Content-Length': img.length
-      });
-      res.end(img);
-    } else {
-      res.status(400).json({ error: 'Invalid image data' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch image' });
   }
 });
 

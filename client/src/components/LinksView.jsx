@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useAuth } from '../stores/authStore.jsx';
 import LinkItem from './LinkItem.jsx';
 import './LinksView.css';
 
 export default function LinksView({ isGreatest = false }) {
-  const { currentWorkspace } = useWorkspace();
+  const { currentServer } = useServer();
   const { token } = useAuth();
   const [links, setLinks] = useState([]);
   const [showAddLink, setShowAddLink] = useState(false);
@@ -13,16 +13,16 @@ export default function LinksView({ isGreatest = false }) {
   const [linkError, setLinkError] = useState('');
 
   useEffect(() => {
-    if (currentWorkspace) {
+    if (currentServer) {
       fetchLinks();
     }
-  }, [currentWorkspace]);
+  }, [currentServer]);
 
   const fetchLinks = async () => {
     try {
       const endpoint = isGreatest 
-        ? `/api/links/workspaces/${currentWorkspace.id}/links/greatest`
-        : `/api/links/workspaces/${currentWorkspace.id}/links`;
+        ? `/api/links/servers/${currentServer.id}/links/greatest`
+        : `/api/links/servers/${currentServer.id}/links`;
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -37,13 +37,19 @@ export default function LinksView({ isGreatest = false }) {
     e.preventDefault();
     setLinkError('');
     try {
-      const response = await fetch(`/api/links/workspaces/${currentWorkspace.id}/links`, {
+      // Normalize URL by adding https:// if no protocol is present
+      const normalizedLink = { ...newLink };
+      if (normalizedLink.url && !normalizedLink.url.match(/^https?:\/\//i)) {
+        normalizedLink.url = `https://${normalizedLink.url}`;
+      }
+      
+      const response = await fetch(`/api/links/servers/${currentServer.id}/links`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newLink)
+        body: JSON.stringify(normalizedLink)
       });
 
       if (!response.ok) {
@@ -62,8 +68,8 @@ export default function LinksView({ isGreatest = false }) {
 
   return (
     <div className="links-view">
-      {!currentWorkspace ? (
-        <div className="no-workspace">
+      {!currentServer ? (
+        <div className="no-realm">
           <p>Please create or select a realm first</p>
         </div>
       ) : (
@@ -83,7 +89,7 @@ export default function LinksView({ isGreatest = false }) {
       {showAddLink && (
         <form className="add-link-form" onSubmit={handleAddLink}>
           <input
-            type="url"
+            type="text"
             className="input"
             placeholder="url"
             value={newLink.url}

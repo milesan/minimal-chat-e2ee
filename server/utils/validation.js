@@ -26,7 +26,7 @@ export function validateUsername(username) {
 
 // Validate server/channel name
 export function validateName(name, type = 'name') {
-  if (!name || typeof name !== 'string') {
+  if (name === undefined || name === null || typeof name !== 'string') {
     return { valid: false, error: `${type} is required` };
   }
   
@@ -182,9 +182,10 @@ export function validateImageData(imageData, filename) {
       return filenameValidation;
     }
     
-    // Check for valid image extension
+    // Check for valid image extension on trimmed filename
+    const trimmedFilename = filenameValidation.value;
     const validExtensions = /\.(jpg|jpeg|png|gif|webp)$/i;
-    if (!validExtensions.test(filename)) {
+    if (!validExtensions.test(trimmedFilename)) {
       return { valid: false, error: 'Filename must have a valid image extension' };
     }
   }

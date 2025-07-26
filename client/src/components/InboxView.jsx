@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useAuth } from '../stores/authStore.jsx';
 import { useSocket } from '../stores/socketStore.jsx';
 import Message from './Message.jsx';
 import './InboxView.css';
 
 export default function InboxView() {
-  const { currentWorkspace, messages } = useWorkspace();
+  const { currentServer, messages } = useServer();
   const { user } = useAuth();
   const socket = useSocket();
   const [inboxMessages, setInboxMessages] = useState([]);
 
   useEffect(() => {
-    if (currentWorkspace && user) {
+    if (currentServer && user) {
       // Collect all messages that quote or reply to the user
       const userMessages = [];
       
@@ -36,7 +36,7 @@ export default function InboxView() {
       userMessages.sort((a, b) => b.created_at - a.created_at);
       setInboxMessages(userMessages);
     }
-  }, [currentWorkspace, messages, user]);
+  }, [currentServer, messages, user]);
 
   return (
     <div className="inbox-view">

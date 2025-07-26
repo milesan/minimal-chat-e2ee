@@ -11,7 +11,7 @@ class SocketRateLimiter {
       'dm_message': { maxRequests: 30, windowMs: 60000 }, // 30 DMs per minute
       'typing': { maxRequests: 60, windowMs: 60000 }, // 60 typing events per minute
       'join_channel': { maxRequests: 20, windowMs: 60000 }, // 20 channel joins per minute
-      'join_workspace': { maxRequests: 10, windowMs: 60000 }, // 10 workspace joins per minute
+      'join_server': { maxRequests: 10, windowMs: 60000 }, // 10 server joins per minute
       'default': { maxRequests: 100, windowMs: 60000 } // 100 other events per minute
     };
     

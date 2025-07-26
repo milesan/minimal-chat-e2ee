@@ -23,6 +23,11 @@ export function ServerProvider({ children }) {
 
   useEffect(() => {
     if (socket && currentServer) {
+      // Clear previous data when switching servers
+      setChannels([]);
+      setCurrentChannel(null);
+      setMessages({});
+      
       socket.emit('join_server', currentServer.id);
       fetchChannels(currentServer.id);
     }
@@ -50,7 +55,7 @@ export function ServerProvider({ children }) {
 
   const fetchServers = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/channels/servers'), {
+      const response = await fetch(getApiUrl('/api/servers'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -74,7 +79,7 @@ export function ServerProvider({ children }) {
 
   const fetchChannels = async (serverId) => {
     try {
-      const response = await fetch(`/api/channels/servers/${serverId}/channels`, {
+      const response = await fetch(`/api/servers/${serverId}/channels`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -89,7 +94,7 @@ export function ServerProvider({ children }) {
 
   const fetchMessages = async (channelId) => {
     try {
-      const response = await fetch(`/api/channels/channels/${channelId}/messages`, {
+      const response = await fetch(`/api/servers/channels/${channelId}/messages`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -101,7 +106,7 @@ export function ServerProvider({ children }) {
 
   const createServer = async (name, description = '', visibility = 'private', encrypted = false) => {
     try {
-      const response = await fetch(getApiUrl('/api/channels/servers'), {
+      const response = await fetch(getApiUrl('/api/servers'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -134,7 +139,7 @@ export function ServerProvider({ children }) {
   const createChannel = async (name, encrypted = false) => {
     if (!currentServer) return;
 
-    const response = await fetch(`/api/channels/servers/${currentServer.id}/channels`, {
+    const response = await fetch(`/api/servers/${currentServer.id}/channels`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
