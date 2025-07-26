@@ -3,13 +3,13 @@
   border-bottom: 1px solid var(--border);
 }
 
-.workspace-selector {
+.server-selector {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
 }
 
-.workspace-dropdown {
+.server-dropdown {
   flex: 1;
   padding: var(--space-xs) var(--space-sm);
   background: var(--bg-primary);
@@ -24,11 +24,11 @@
   color: var(--text-primary);
 }
 
-.workspace-dropdown:hover {
+.server-dropdown:hover {
   border-color: var(--text-tertiary);
 }
 
-.workspace-dropdown:focus {
+.server-dropdown:focus {
   outline: none;
   box-shadow: var(--focus-ring);
   border-color: var(--accent);
@@ -253,4 +253,81 @@
   gap: var(--space-md);
   justify-content: flex-end;
   margin-top: var(--space-xl);
+}
+
+/* Checkbox group styles */
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.checkbox-group label {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* Encryption key modal styles */
+.modal-wide {
+  width: 95%;
+  max-width: 600px;
+}
+
+.encryption-key-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background-color: var(--warning-bg, rgba(255, 193, 7, 0.1));
+  border: 1px solid var(--warning-border, rgba(255, 193, 7, 0.3));
+  border-radius: var(--radius);
+  margin-bottom: var(--space-lg);
+}
+
+.warning-icon {
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+.encryption-key-warning p {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.encryption-key-display {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-md);
+}
+
+.key-code {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  word-break: break-all;
+  user-select: all;
+}
+
+.encryption-key-note {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
 }

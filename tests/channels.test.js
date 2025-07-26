@@ -15,7 +15,7 @@ app.use('/api/channels', channelRoutes);
 describe('Channels API', () => {
   let authToken;
   let userId;
-  let workspaceId;
+  let serverId;
 
   beforeAll(async () => {
     await initializeDatabase();
@@ -30,8 +30,8 @@ describe('Channels API', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -51,49 +51,49 @@ describe('Channels API', () => {
     // Don't close db as it's shared
   });
 
-  describe('POST /api/channels/workspaces', () => {
-    it('should create a new workspace', async () => {
+  describe('POST /api/channels/servers', () => {
+    it('should create a new server', async () => {
       const response = await request(app)
-        .post('/api/channels/workspaces')
+        .post('/api/channels/servers')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          name: 'Test Workspace'
+          name: 'Test Server'
         });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('id');
-      expect(response.body.name).toBe('Test Workspace');
-      workspaceId = response.body.id;
+      expect(response.body.name).toBe('Test Server');
+      serverId = response.body.id;
     });
 
     it('should reject without authentication', async () => {
       const response = await request(app)
-        .post('/api/channels/workspaces')
+        .post('/api/channels/servers')
         .send({
-          name: 'Another Workspace'
+          name: 'Another Server'
         });
 
       expect(response.status).toBe(401);
     });
   });
 
-  describe('GET /api/channels/workspaces', () => {
-    it('should list user workspaces', async () => {
+  describe('GET /api/channels/servers', () => {
+    it('should list user servers', async () => {
       const response = await request(app)
-        .get('/api/channels/workspaces')
+        .get('/api/channels/servers')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBeGreaterThan(0);
-      expect(response.body[0].name).toBe('Test Workspace');
+      expect(response.body[0].name).toBe('Test Server');
     });
   });
 
-  describe('POST /api/channels/workspaces/:workspaceId/channels', () => {
+  describe('POST /api/channels/servers/:serverId/channels', () => {
     it('should create a new channel', async () => {
       const response = await request(app)
-        .post(`/api/channels/workspaces/${workspaceId}/channels`)
+        .post(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'test-channel'
@@ -106,7 +106,7 @@ describe('Channels API', () => {
 
     it('should reject duplicate channel names', async () => {
       const response = await request(app)
-        .post(`/api/channels/workspaces/${workspaceId}/channels`)
+        .post(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'test-channel'
@@ -117,10 +117,10 @@ describe('Channels API', () => {
     });
   });
 
-  describe('GET /api/channels/workspaces/:workspaceId/channels', () => {
-    it('should list workspace channels', async () => {
+  describe('GET /api/channels/servers/:serverId/channels', () => {
+    it('should list server channels', async () => {
       const response = await request(app)
-        .get(`/api/channels/workspaces/${workspaceId}/channels`)
+        .get(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);

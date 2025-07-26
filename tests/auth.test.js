@@ -24,8 +24,8 @@ describe('Authentication API', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -76,11 +76,21 @@ describe('Authentication API', () => {
   });
 
   describe('POST /api/auth/login', () => {
+    beforeAll(async () => {
+      // Ensure test user exists for login tests
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          username: 'logintest',
+          password: 'testpassword123'
+        });
+    });
+
     it('should login with valid credentials', async () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'authtest1',
+          username: 'logintest',
           password: 'testpassword123'
         });
 
@@ -93,7 +103,7 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'authtest1',
+          username: 'logintest',
           password: 'wrongpassword'
         });
 

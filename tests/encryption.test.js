@@ -15,7 +15,7 @@ app.use('/api/channels', channelRoutes);
 describe('End-to-End Encryption', () => {
   let authToken;
   let userId;
-  let workspaceId;
+  let serverId;
   let encryptedChannelId;
 
   beforeAll(async () => {
@@ -31,8 +31,8 @@ describe('End-to-End Encryption', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -47,14 +47,14 @@ describe('End-to-End Encryption', () => {
     authToken = authResponse.body.token;
     userId = authResponse.body.user.id;
 
-    const workspaceResponse = await request(app)
-      .post('/api/channels/workspaces')
+    const serverResponse = await request(app)
+      .post('/api/channels/servers')
       .set('Authorization', `Bearer ${authToken}`)
       .send({
-        name: 'Encryption Test Workspace'
+        name: 'Encryption Test Server'
       });
     
-    workspaceId = workspaceResponse.body.id;
+    serverId = serverResponse.body.id;
   });
 
   afterAll(() => {
@@ -64,12 +64,12 @@ describe('End-to-End Encryption', () => {
   describe('Encrypted Channels', () => {
     it('should create an encrypted channel', async () => {
       const response = await request(app)
-        .post(`/api/channels/workspaces/${workspaceId}/channels`)
+        .post(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'encrypted-channel',
-          is_encrypted: true,
-          password_hint: 'test hint'
+          encrypted: true,
+          passwordHint: 'test hint'
         });
 
       expect(response.status).toBe(200);
@@ -90,12 +90,14 @@ describe('End-to-End Encryption', () => {
       });
 
       // Insert encrypted message directly to database
+      const messageId = 'test-encrypted-msg-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, encrypted, encryption_metadata)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, encrypted, encryption_metadata)
+        VALUES (?, ?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        messageId,
         encryptedChannelId,
         userId,
         encryptedContent,
@@ -106,7 +108,7 @@ describe('End-to-End Encryption', () => {
       expect(result.changes).toBe(1);
 
       // Verify the message is stored as encrypted
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId);
       expect(message.encrypted).toBe(1);
       expect(message.content).toBe(encryptedContent);
       expect(message.encryption_metadata).toBe(encryptionMetadata);
@@ -114,7 +116,7 @@ describe('End-to-End Encryption', () => {
 
     it('should retrieve channel encryption status', async () => {
       const response = await request(app)
-        .get(`/api/channels/workspaces/${workspaceId}/channels`)
+        .get(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
@@ -126,7 +128,7 @@ describe('End-to-End Encryption', () => {
 
     it('should create non-encrypted channel by default', async () => {
       const response = await request(app)
-        .post(`/api/channels/workspaces/${workspaceId}/channels`)
+        .post(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'regular-channel'
@@ -157,7 +159,7 @@ describe('End-to-End Encryption', () => {
 
     it('should handle messages without encryption in regular channels', async () => {
       const regularChannelResponse = await request(app)
-        .post(`/api/channels/workspaces/${workspaceId}/channels`)
+        .post(`/api/channels/servers/${serverId}/channels`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'plain-channel'
@@ -166,19 +168,21 @@ describe('End-to-End Encryption', () => {
       const channelId = regularChannelResponse.body.id;
 
       // Insert regular message
+      const messageId = 'test-plain-msg-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, encrypted)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, encrypted)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        messageId,
         channelId,
         userId,
         'This is a plain text message',
         0
       );
 
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId);
       expect(message.encrypted).toBe(0);
       expect(message.encryption_metadata).toBeNull();
       expect(message.content).toBe('This is a plain text message');

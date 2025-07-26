@@ -3,13 +3,13 @@ import { useAuth } from './authStore.jsx';
 import { useSocket } from './socketStore.jsx';
 import { getApiUrl } from '../config.js';
 
-const WorkspaceContext = createContext();
+const ServerContext = createContext();
 
-export function WorkspaceProvider({ children }) {
+export function ServerProvider({ children }) {
   const { token } = useAuth();
   const socket = useSocket();
-  const [workspaces, setWorkspaces] = useState([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState(null);
+  const [servers, setServers] = useState([]);
+  const [currentServer, setCurrentServer] = useState(null);
   const [channels, setChannels] = useState([]);
   const [currentChannel, setCurrentChannel] = useState(null);
   const [messages, setMessages] = useState({});
@@ -17,16 +17,16 @@ export function WorkspaceProvider({ children }) {
 
   useEffect(() => {
     if (token) {
-      fetchWorkspaces();
+      fetchServers();
     }
   }, [token]);
 
   useEffect(() => {
-    if (socket && currentWorkspace) {
-      socket.emit('join_workspace', currentWorkspace.id);
-      fetchChannels(currentWorkspace.id);
+    if (socket && currentServer) {
+      socket.emit('join_server', currentServer.id);
+      fetchChannels(currentServer.id);
     }
-  }, [socket, currentWorkspace]);
+  }, [socket, currentServer]);
 
   useEffect(() => {
     if (socket && currentChannel) {
@@ -48,33 +48,33 @@ export function WorkspaceProvider({ children }) {
     }
   }, [socket, currentChannel]);
 
-  const fetchWorkspaces = async () => {
+  const fetchServers = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/channels/workspaces'), {
+      const response = await fetch(getApiUrl('/api/channels/servers'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (!response.ok) {
         const error = await response.json();
-        console.error('Failed to fetch workspaces:', error);
+        console.error('Failed to fetch servers:', error);
         return;
       }
       
       const data = await response.json();
-      setWorkspaces(data);
-      if (data.length > 0 && !currentWorkspace) {
-        setCurrentWorkspace(data[0]);
+      setServers(data);
+      if (data.length > 0 && !currentServer) {
+        setCurrentServer(data[0]);
       }
     } catch (error) {
-      console.error('Failed to fetch workspaces:', error);
+      console.error('Failed to fetch servers:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchChannels = async (workspaceId) => {
+  const fetchChannels = async (serverId) => {
     try {
-      const response = await fetch(`/api/channels/workspaces/${workspaceId}/channels`, {
+      const response = await fetch(`/api/channels/servers/${serverId}/channels`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -99,15 +99,15 @@ export function WorkspaceProvider({ children }) {
     }
   };
 
-  const createWorkspace = async (name) => {
+  const createServer = async (name, description = '', visibility = 'private', encrypted = false) => {
     try {
-      const response = await fetch(getApiUrl('/api/channels/workspaces'), {
+      const response = await fetch(getApiUrl('/api/channels/servers'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, description, visibility, encrypted })
       });
 
       const contentType = response.headers.get('content-type');
@@ -118,10 +118,10 @@ export function WorkspaceProvider({ children }) {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create workspace');
+        throw new Error(data.error || 'Failed to create server');
       }
 
-      await fetchWorkspaces();
+      await fetchServers();
       return data;
     } catch (error) {
       if (error.message.includes('Failed to fetch')) {
@@ -132,9 +132,9 @@ export function WorkspaceProvider({ children }) {
   };
 
   const createChannel = async (name, encrypted = false) => {
-    if (!currentWorkspace) return;
+    if (!currentServer) return;
 
-    const response = await fetch(`/api/channels/workspaces/${currentWorkspace.id}/channels`, {
+    const response = await fetch(`/api/channels/servers/${currentServer.id}/channels`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -149,7 +149,7 @@ export function WorkspaceProvider({ children }) {
     }
 
     const newChannel = await response.json();
-    await fetchChannels(currentWorkspace.id);
+    await fetchChannels(currentServer.id);
     return newChannel;
   };
 
@@ -160,26 +160,27 @@ export function WorkspaceProvider({ children }) {
   };
 
   const value = {
-    workspaces,
-    currentWorkspace,
-    setCurrentWorkspace,
+    servers,
+    currentServer,
+    setCurrentServer,
     channels,
     currentChannel,
     setCurrentChannel,
     messages,
     loading,
-    createWorkspace,
+    createServer,
     createChannel,
-    sendMessage
+    sendMessage,
+    fetchServers
   };
 
-  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
+  return <ServerContext.Provider value={value}>{children}</ServerContext.Provider>;
 }
 
-export function useWorkspace() {
-  const context = useContext(WorkspaceContext);
+export function useServer() {
+  const context = useContext(ServerContext);
   if (!context) {
-    throw new Error('useWorkspace must be used within WorkspaceProvider');
+    throw new Error('useServer must be used within ServerProvider');
   }
   return context;
 }

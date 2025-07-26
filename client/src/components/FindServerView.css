@@ -1,0 +1,237 @@
+.find-server-view {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-primary);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.find-server-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.find-server-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.close-button:hover {
+  background: var(--bg-secondary);
+}
+
+.find-server-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.invite-code-section {
+  margin-bottom: 30px;
+}
+
+.invite-code-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.invite-code-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invite-input {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.invite-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.invite-code-input-group button {
+  padding: 10px 24px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.invite-code-input-group button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.invite-code-input-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.divider {
+  text-align: center;
+  margin: 30px 0;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.divider span {
+  background: var(--bg-primary);
+  padding: 0 16px;
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.public-servers-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.loading,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.public-servers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.public-server-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.2s;
+}
+
+.public-server-item:hover {
+  border-color: var(--accent-color);
+}
+
+.server-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.server-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.server-description {
+  margin: 4px 0 8px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.member-count {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.join-button {
+  padding: 8px 20px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.join-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.join-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 6px;
+  color: #ff4444;
+  font-size: 14px;
+}
+
+.encryption-hint {
+  margin-top: 8px;
+  padding: 10px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .find-server-view {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2a2a2a;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #666666;
+  --border-color: #3a3a3a;
+  --accent-color: #5865f2;
+}

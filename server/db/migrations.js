@@ -50,25 +50,31 @@ export const runMigrations = () => {
     // Table might already exist
   }
 
-  // Add workspace settings
+  // Add workspace/server settings
   try {
-    // Check if images_enabled column exists
-    const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
-    const hasImagesEnabled = workspacesTable.some(col => col.name === 'images_enabled');
-    const hasImagesEnabledAt = workspacesTable.some(col => col.name === 'images_enabled_at');
+    // Check if we have workspaces or servers table
+    const hasWorkspacesTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='workspaces'").get();
+    const hasServersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").get();
     
-    if (!hasImagesEnabled) {
-      db.exec(`
-        ALTER TABLE workspaces ADD COLUMN images_enabled INTEGER DEFAULT 0;
-      `);
-      logMigration('Added images_enabled column to workspaces table');
-    }
-    
-    if (!hasImagesEnabledAt) {
-      db.exec(`
-        ALTER TABLE workspaces ADD COLUMN images_enabled_at INTEGER;
-      `);
-      logMigration('Added images_enabled_at column to workspaces table');
+    if (hasWorkspacesTable) {
+      // Check if images_enabled column exists
+      const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
+      const hasImagesEnabled = workspacesTable.some(col => col.name === 'images_enabled');
+      const hasImagesEnabledAt = workspacesTable.some(col => col.name === 'images_enabled_at');
+      
+      if (!hasImagesEnabled) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN images_enabled INTEGER DEFAULT 0;
+        `);
+        logMigration('Added images_enabled column to workspaces table');
+      }
+      
+      if (!hasImagesEnabledAt) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN images_enabled_at INTEGER;
+        `);
+        logMigration('Added images_enabled_at column to workspaces table');
+      }
     }
 
     // Check if image_url column exists in messages
@@ -188,7 +194,7 @@ export const runMigrations = () => {
       db.exec(`
         ALTER TABLE voice_sessions ADD COLUMN started_by TEXT;
       `);
-      console.log('Added started_by column to voice_sessions table');
+      logMigration('Added started_by column to voice_sessions table');
     }
   } catch (e) {
     console.error('Voice sessions migration error:', e);
@@ -227,5 +233,170 @@ export const runMigrations = () => {
     console.log('Created link_votes table');
   } catch (e) {
     // Table might already exist
+  }
+
+  // Add workspace/server visibility and invitation system
+  try {
+    // Check if we're dealing with workspaces or servers table
+    const hasWorkspacesTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='workspaces'").get();
+    const hasServersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").get();
+    
+    if (hasWorkspacesTable) {
+      // Legacy migration for workspaces table (before rename to servers)
+      const workspacesTable = db.prepare("PRAGMA table_info(workspaces)").all();
+      const hasVisibility = workspacesTable.some(col => col.name === 'visibility');
+      const hasDescription = workspacesTable.some(col => col.name === 'description');
+      
+      if (!hasVisibility) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN visibility TEXT DEFAULT 'private' CHECK (visibility IN ('public', 'private'));
+        `);
+        logMigration('Added visibility column to workspaces table');
+      }
+      
+      if (!hasDescription) {
+        db.exec(`
+          ALTER TABLE workspaces ADD COLUMN description TEXT;
+        `);
+        logMigration('Added description column to workspaces table');
+      }
+    }
+
+    // Create invitations table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS workspace_invitations (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL,
+        code TEXT UNIQUE NOT NULL,
+        created_by TEXT NOT NULL,
+        uses_count INTEGER DEFAULT 0,
+        max_uses INTEGER,
+        expires_at INTEGER,
+        created_at INTEGER DEFAULT (unixepoch()),
+        FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_invitations_code ON workspace_invitations(code);
+      CREATE INDEX IF NOT EXISTS idx_invitations_workspace ON workspace_invitations(workspace_id);
+    `);
+    logMigration('Created workspace_invitations table');
+
+    // Create invitation uses tracking table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS invitation_uses (
+        invitation_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        used_at INTEGER DEFAULT (unixepoch()),
+        PRIMARY KEY (invitation_id, user_id),
+        FOREIGN KEY (invitation_id) REFERENCES workspace_invitations(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+    `);
+    logMigration('Created invitation_uses table');
+  } catch (e) {
+    console.error('Workspace visibility migration error:', e);
+  }
+
+  // Rename workspaces to servers and add encryption
+  try {
+    // Check if servers table already exists
+    const tablesQuery = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'");
+    const serversTableExists = tablesQuery.get();
+    
+    if (!serversTableExists) {
+      // Create new servers table with encryption fields
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS servers (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_by TEXT NOT NULL,
+          created_at INTEGER DEFAULT (unixepoch()),
+          description TEXT,
+          visibility TEXT DEFAULT 'private' CHECK (visibility IN ('public', 'private')),
+          images_enabled INTEGER DEFAULT 0,
+          images_enabled_at INTEGER,
+          encrypted INTEGER DEFAULT 0,
+          encryption_key_hash TEXT,
+          encryption_salt TEXT,
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        );
+        
+        -- Copy data from workspaces to servers
+        INSERT INTO servers (id, name, created_by, created_at, description, visibility, images_enabled, images_enabled_at)
+        SELECT id, name, created_by, created_at, description, visibility, images_enabled, images_enabled_at
+        FROM workspaces;
+        
+        -- Create server_members table
+        CREATE TABLE IF NOT EXISTS server_members (
+          server_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          role TEXT DEFAULT 'member',
+          joined_at INTEGER DEFAULT (unixepoch()),
+          PRIMARY KEY (server_id, user_id),
+          FOREIGN KEY (server_id) REFERENCES servers(id),
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        
+        -- Copy data from workspace_members
+        INSERT INTO server_members (server_id, user_id, role, joined_at)
+        SELECT workspace_id, user_id, role, joined_at
+        FROM workspace_members;
+        
+        -- Create server_invitations table
+        CREATE TABLE IF NOT EXISTS server_invitations (
+          id TEXT PRIMARY KEY,
+          server_id TEXT NOT NULL,
+          code TEXT UNIQUE NOT NULL,
+          created_by TEXT NOT NULL,
+          uses_count INTEGER DEFAULT 0,
+          max_uses INTEGER,
+          expires_at INTEGER,
+          created_at INTEGER DEFAULT (unixepoch()),
+          FOREIGN KEY (server_id) REFERENCES servers(id),
+          FOREIGN KEY (created_by) REFERENCES users(id)
+        );
+        
+        -- Copy data from workspace_invitations
+        INSERT INTO server_invitations (id, server_id, code, created_by, uses_count, max_uses, expires_at, created_at)
+        SELECT id, workspace_id, code, created_by, uses_count, max_uses, expires_at, created_at
+        FROM workspace_invitations;
+        
+        -- Update channels table to reference servers
+        ALTER TABLE channels RENAME COLUMN workspace_id TO server_id;
+        
+        -- Update links table to reference servers
+        ALTER TABLE links RENAME COLUMN workspace_id TO server_id;
+        
+        -- Create invite_minting table for 6-month limit
+        CREATE TABLE IF NOT EXISTS invite_minting (
+          user_id TEXT NOT NULL,
+          server_id TEXT NOT NULL,
+          minted_at INTEGER DEFAULT (unixepoch()),
+          PRIMARY KEY (user_id, server_id, minted_at),
+          FOREIGN KEY (user_id) REFERENCES users(id),
+          FOREIGN KEY (server_id) REFERENCES servers(id)
+        );
+        
+        -- Create indexes
+        CREATE INDEX IF NOT EXISTS idx_server_members_user ON server_members(user_id);
+        CREATE INDEX IF NOT EXISTS idx_server_invitations_code ON server_invitations(code);
+        CREATE INDEX IF NOT EXISTS idx_server_invitations_server ON server_invitations(server_id);
+        CREATE INDEX IF NOT EXISTS idx_invite_minting_user ON invite_minting(user_id);
+        CREATE INDEX IF NOT EXISTS idx_links_server ON links(server_id);
+        
+        -- Drop old tables
+        DROP TABLE IF EXISTS workspace_invitations;
+        DROP TABLE IF EXISTS workspace_members;
+        DROP TABLE IF EXISTS workspaces;
+        DROP INDEX IF EXISTS idx_workspace_members_user;
+        DROP INDEX IF EXISTS idx_invitations_code;
+        DROP INDEX IF EXISTS idx_invitations_workspace;
+        DROP INDEX IF EXISTS idx_links_workspace;
+      `);
+      logMigration('Renamed workspaces to servers and added encryption support');
+    }
+  } catch (e) {
+    console.error('Server rename migration error:', e);
   }
 };

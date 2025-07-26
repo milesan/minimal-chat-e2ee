@@ -8,8 +8,8 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.post('/workspaces/:workspaceId/links', (req, res) => {
-  const { workspaceId } = req.params;
+router.post('/servers/:serverId/links', (req, res) => {
+  const { serverId } = req.params;
   const { url, title, topic, description, short_description } = req.body;
   const userId = req.user.id;
 
@@ -42,14 +42,14 @@ router.post('/workspaces/:workspaceId/links', (req, res) => {
   }
 
   try {
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(workspaceId, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(serverId, userId);
     if (!member) {
-      return res.status(403).json({ error: 'Not a workspace member' });
+      return res.status(403).json({ error: 'Not a server member' });
     }
 
     const linkId = uuidv4();
-    db.prepare('INSERT INTO links (id, workspace_id, url, title, topic, description, short_description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
-      linkId, workspaceId, urlValidation.value, titleValidation.value, 
+    db.prepare('INSERT INTO links (id, server_id, url, title, topic, description, short_description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
+      linkId, serverId, urlValidation.value, titleValidation.value, 
       topicValidation.value || null, descValidation.value || null, 
       shortDescValidation.value || null, userId
     );
@@ -70,14 +70,14 @@ router.post('/workspaces/:workspaceId/links', (req, res) => {
   }
 });
 
-router.get('/workspaces/:workspaceId/links', (req, res) => {
-  const { workspaceId } = req.params;
+router.get('/servers/:serverId/links', (req, res) => {
+  const { serverId } = req.params;
   const userId = req.user.id;
 
   try {
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(workspaceId, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(serverId, userId);
     if (!member) {
-      return res.status(403).json({ error: 'Not a workspace member' });
+      return res.status(403).json({ error: 'Not a server member' });
     }
 
     const links = db.prepare(`
@@ -93,10 +93,10 @@ router.get('/workspaces/:workspaceId/links', (req, res) => {
       LEFT JOIN link_ratings lr ON l.id = lr.link_id
       LEFT JOIN link_comments lc ON l.id = lc.link_id
       LEFT JOIN link_ratings ur ON l.id = ur.link_id AND ur.user_id = ?
-      WHERE l.workspace_id = ?
+      WHERE l.server_id = ?
       GROUP BY l.id
       ORDER BY l.created_at DESC
-    `).all(userId, workspaceId);
+    `).all(userId, serverId);
 
     res.json(links);
   } catch (error) {
@@ -114,14 +114,14 @@ router.post('/links/:linkId/rate', (req, res) => {
   }
 
   try {
-    const link = db.prepare('SELECT workspace_id FROM links WHERE id = ?').get(linkId);
+    const link = db.prepare('SELECT server_id FROM links WHERE id = ?').get(linkId);
     if (!link) {
       return res.status(404).json({ error: 'Link not found' });
     }
 
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(link.workspace_id, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(link.server_id, userId);
     if (!member) {
-      return res.status(403).json({ error: 'Not a workspace member' });
+      return res.status(403).json({ error: 'Not a server member' });
     }
 
     db.prepare('INSERT OR REPLACE INTO link_ratings (link_id, user_id, rating) VALUES (?, ?, ?)').run(linkId, userId, rating);
@@ -152,14 +152,14 @@ router.post('/links/:linkId/comments', (req, res) => {
   }
 
   try {
-    const link = db.prepare('SELECT workspace_id FROM links WHERE id = ?').get(linkId);
+    const link = db.prepare('SELECT server_id FROM links WHERE id = ?').get(linkId);
     if (!link) {
       return res.status(404).json({ error: 'Link not found' });
     }
 
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(link.workspace_id, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(link.server_id, userId);
     if (!member) {
-      return res.status(403).json({ error: 'Not a workspace member' });
+      return res.status(403).json({ error: 'Not a server member' });
     }
 
     const commentId = uuidv4();
@@ -186,14 +186,14 @@ router.get('/links/:linkId/comments', (req, res) => {
   const userId = req.user.id;
 
   try {
-    const link = db.prepare('SELECT workspace_id FROM links WHERE id = ?').get(linkId);
+    const link = db.prepare('SELECT server_id FROM links WHERE id = ?').get(linkId);
     if (!link) {
       return res.status(404).json({ error: 'Link not found' });
     }
 
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(link.workspace_id, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(link.server_id, userId);
     if (!member) {
-      return res.status(403).json({ error: 'Not a workspace member' });
+      return res.status(403).json({ error: 'Not a server member' });
     }
 
     const comments = db.prepare(`
@@ -210,14 +210,14 @@ router.get('/links/:linkId/comments', (req, res) => {
   }
 });
 
-router.get('/workspaces/:workspaceId/links/greatest', (req, res) => {
-  const { workspaceId } = req.params;
+router.get('/servers/:serverId/links/greatest', (req, res) => {
+  const { serverId } = req.params;
   const userId = req.user.id;
 
   try {
-    const member = db.prepare('SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?').get(workspaceId, userId);
+    const member = db.prepare('SELECT * FROM server_members WHERE server_id = ? AND user_id = ?').get(serverId, userId);
     if (!member) {
-      return res.status(403).json({ error: 'Not a workspace member' });
+      return res.status(403).json({ error: 'Not a server member' });
     }
 
     const links = db.prepare(`
@@ -233,11 +233,11 @@ router.get('/workspaces/:workspaceId/links/greatest', (req, res) => {
       LEFT JOIN link_ratings lr ON l.id = lr.link_id
       LEFT JOIN link_comments lc ON l.id = lc.link_id
       LEFT JOIN link_ratings ur ON l.id = ur.link_id AND ur.user_id = ?
-      WHERE l.workspace_id = ?
+      WHERE l.server_id = ?
       GROUP BY l.id
       HAVING COUNT(DISTINCT lr.user_id) >= 25
       ORDER BY AVG(lr.rating) DESC
-    `).all(userId, workspaceId);
+    `).all(userId, serverId);
 
     res.json(links);
   } catch (error) {

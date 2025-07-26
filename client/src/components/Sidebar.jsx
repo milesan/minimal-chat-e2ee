@@ -1,51 +1,63 @@
 import React, { useState } from 'react';
 import { useAuth } from '../stores/authStore.jsx';
-import { useWorkspace } from '../stores/workspaceStore.jsx';
+import { useServer } from '../stores/serverStore.jsx';
 import { useEncryption } from '../stores/encryptionStore.jsx';
-import WorkspaceSettings from './WorkspaceSettings.jsx';
+import ServerSettings from './ServerSettings.jsx';
 import EncryptionModal from './EncryptionModal.jsx';
+import FindServerView from './FindServerView.jsx';
 import './Sidebar.css';
 
 export default function Sidebar({ view, setView }) {
   const { user, logout } = useAuth();
   const {
-    workspaces,
-    currentWorkspace,
-    setCurrentWorkspace,
+    servers,
+    currentServer,
+    setCurrentServer,
     channels,
     currentChannel,
     setCurrentChannel,
-    createWorkspace,
+    createServer,
     createChannel
-  } = useWorkspace();
+  } = useServer();
   
-  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
+  const [showServerModal, setShowServerModal] = useState(false);
   const [showChannelModal, setShowChannelModal] = useState(false);
-  const [workspaceName, setWorkspaceName] = useState('');
+  const [serverName, setServerName] = useState('');
   const [channelName, setChannelName] = useState('');
-  const [workspaceError, setWorkspaceError] = useState('');
+  const [serverError, setServerError] = useState('');
   const [channelError, setChannelError] = useState('');
-  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+  const [serverLoading, setServerLoading] = useState(false);
   const [channelLoading, setChannelLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showFindServer, setShowFindServer] = useState(false);
   const [createEncrypted, setCreateEncrypted] = useState(false);
   const [showEncryptionModal, setShowEncryptionModal] = useState(false);
   const [newEncryptedChannel, setNewEncryptedChannel] = useState(null);
+  const [createEncryptedServer, setCreateEncryptedServer] = useState(false);
+  const [showServerKeyModal, setShowServerKeyModal] = useState(false);
+  const [newServerKey, setNewServerKey] = useState(null);
   const { setPassword } = useEncryption();
 
-  const handleCreateWorkspace = async (e) => {
+  const handleCreateServer = async (e) => {
     e.preventDefault();
-    setWorkspaceError('');
-    setWorkspaceLoading(true);
+    setServerError('');
+    setServerLoading(true);
     try {
-      await createWorkspace(workspaceName);
-      setWorkspaceName('');
-      setShowWorkspaceModal(false);
+      const newServer = await createServer(serverName, '', 'private', createEncryptedServer);
+      setServerName('');
+      setCreateEncryptedServer(false);
+      setShowServerModal(false);
+      
+      // If encrypted and key was generated, show it to the user
+      if (createEncryptedServer && newServer.encryptionKey) {
+        setNewServerKey(newServer.encryptionKey);
+        setShowServerKeyModal(true);
+      }
     } catch (error) {
-      console.error('Failed to create workspace:', error);
-      setWorkspaceError(error.message || 'Failed to create realm');
+      console.error('Failed to create server:', error);
+      setServerError(error.message || 'Failed to create server');
     } finally {
-      setWorkspaceLoading(false);
+      setServerLoading(false);
     }
   };
 
@@ -75,40 +87,48 @@ export default function Sidebar({ view, setView }) {
   return (
     <aside className="sidebar" role="navigation" aria-label="Main navigation">
       <div className="sidebar-header">
-        <div className="workspace-selector">
+        <div className="server-selector">
           <select
-            className="workspace-dropdown"
-            value={currentWorkspace?.id || ''}
+            className="server-dropdown"
+            value={currentServer?.id || ''}
             onChange={(e) => {
-              const workspace = workspaces.find(w => w.id === e.target.value);
-              setCurrentWorkspace(workspace);
+              const server = servers.find(w => w.id === e.target.value);
+              setCurrentServer(server);
             }}
-            aria-label="Select realm"
+            aria-label="Select server"
           >
-            {workspaces.length === 0 ? (
-              <option value="">no realms</option>
+            {servers.length === 0 ? (
+              <option value="">no servers</option>
             ) : (
-              workspaces.map(workspace => (
-                <option key={workspace.id} value={workspace.id}>
-                  {workspace.name}
+              servers.map(server => (
+                <option key={server.id} value={server.id}>
+                  {server.name}
                 </option>
               ))
             )}
           </select>
           <button 
             className="btn btn-icon btn-sm btn-ghost"
-            onClick={() => setShowWorkspaceModal(true)}
-            aria-label="Create new realm"
-            title="Create realm"
+            onClick={() => setShowServerModal(true)}
+            aria-label="Create new server"
+            title="Create server"
           >
             <span aria-hidden="true">+</span>
           </button>
-          {currentWorkspace && (
+          <button 
+            className="btn btn-icon btn-sm btn-ghost"
+            onClick={() => setShowFindServer(true)}
+            aria-label="Find servers"
+            title="Find servers"
+          >
+            <span aria-hidden="true">🔍</span>
+          </button>
+          {currentServer && (
             <button 
               className="btn btn-icon btn-sm btn-ghost"
               onClick={() => setShowSettings(true)}
-              aria-label="Realm settings"
-              title="Realm settings"
+              aria-label="Server settings"
+              title="Server settings"
             >
               <span aria-hidden="true">⚙</span>
             </button>
@@ -233,33 +253,46 @@ export default function Sidebar({ view, setView }) {
         </div>
       </div>
 
-      {showWorkspaceModal && (
+      {showServerModal && (
         <div className="modal-overlay" onClick={() => {
-          setShowWorkspaceModal(false);
-          setWorkspaceError('');
-        }} role="dialog" aria-modal="true" aria-labelledby="workspace-modal-title">
+          setShowServerModal(false);
+          setServerError('');
+        }} role="dialog" aria-modal="true" aria-labelledby="server-modal-title">
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2 id="workspace-modal-title">Create Realm</h2>
-            <form onSubmit={handleCreateWorkspace}>
+            <h2 id="server-modal-title">Create Server</h2>
+            <form onSubmit={handleCreateServer}>
               <div className="input-group">
                 <input
                   type="text"
-                  id="workspace-name"
+                  id="server-name"
                   className="input"
                   placeholder=" "
-                  value={workspaceName}
-                  onChange={(e) => setWorkspaceName(e.target.value)}
+                  value={serverName}
+                  onChange={(e) => setServerName(e.target.value)}
                   required
                   autoFocus
-                  disabled={workspaceLoading}
-                  aria-describedby={workspaceError ? 'workspace-error' : undefined}
-                  aria-invalid={!!workspaceError}
+                  disabled={serverLoading}
+                  aria-describedby={serverError ? 'server-error' : undefined}
+                  aria-invalid={!!serverError}
                 />
-                <label htmlFor="workspace-name" className="input-label">Realm name</label>
+                <label htmlFor="server-name" className="input-label">Server name</label>
               </div>
-              {workspaceError && (
-                <div id="workspace-error" className="input-error-message" role="alert" aria-live="polite">
-                  <span aria-hidden="true">⚠</span> {workspaceError}
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="server-encrypted"
+                  checked={createEncryptedServer}
+                  onChange={(e) => setCreateEncryptedServer(e.target.checked)}
+                  disabled={serverLoading}
+                />
+                <label htmlFor="server-encrypted">
+                  Create encrypted server
+                  <span className="checkbox-hint">Server data will be end-to-end encrypted</span>
+                </label>
+              </div>
+              {serverError && (
+                <div id="server-error" className="input-error-message" role="alert" aria-live="polite">
+                  <span aria-hidden="true">⚠</span> {serverError}
                 </div>
               )}
               <div className="modal-actions">
@@ -267,15 +300,15 @@ export default function Sidebar({ view, setView }) {
                   type="button" 
                   className="btn btn-secondary" 
                   onClick={() => {
-                    setShowWorkspaceModal(false);
-                    setWorkspaceError('');
+                    setShowServerModal(false);
+                    setServerError('');
                   }}
-                  disabled={workspaceLoading}
+                  disabled={serverLoading}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={workspaceLoading}>
-                  {workspaceLoading ? (
+                <button type="submit" className="btn btn-primary" disabled={serverLoading}>
+                  {serverLoading ? (
                     <>
                       <span className="spinner"></span>
                       Creating...
@@ -359,7 +392,7 @@ export default function Sidebar({ view, setView }) {
       )}
 
       {showSettings && (
-        <WorkspaceSettings onClose={() => setShowSettings(false)} />
+        <ServerSettings onClose={() => setShowSettings(false)} />
       )}
 
       {showEncryptionModal && newEncryptedChannel && (
@@ -378,6 +411,53 @@ export default function Sidebar({ view, setView }) {
             setNewEncryptedChannel(null);
           }}
         />
+      )}
+
+      {showFindServer && (
+        <FindServerView onClose={() => setShowFindServer(false)} />
+      )}
+
+      {showServerKeyModal && newServerKey && (
+        <div className="modal-overlay" onClick={() => setShowServerKeyModal(false)} role="dialog" aria-modal="true">
+          <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
+            <h2>Server Encryption Key</h2>
+            <div className="encryption-key-warning">
+              <span className="warning-icon" aria-hidden="true">⚠️</span>
+              <p>
+                <strong>Save this encryption key immediately!</strong> 
+                You'll need it to share with others when inviting them to this server.
+              </p>
+            </div>
+            <div className="encryption-key-display">
+              <code className="key-code">{newServerKey}</code>
+              <button 
+                className="btn btn-sm btn-ghost"
+                onClick={() => {
+                  navigator.clipboard.writeText(newServerKey);
+                  alert('Encryption key copied to clipboard!');
+                }}
+                title="Copy to clipboard"
+              >
+                📋
+              </button>
+            </div>
+            <p className="encryption-key-note">
+              This key is required along with an invitation code for others to join your encrypted server.
+              Store it securely - it cannot be recovered if lost!
+            </p>
+            <div className="modal-actions">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setShowServerKeyModal(false);
+                  setNewServerKey(null);
+                }}
+              >
+                I've saved the key
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </aside>
   );

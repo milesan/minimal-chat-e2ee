@@ -19,7 +19,7 @@ app.use('/api/channels', channelRoutes);
 describe('Threads and Quotes', () => {
   let authToken;
   let userId;
-  let workspaceId;
+  let serverId;
   let channelId;
   let parentMessageId;
   let io, httpServer, clientSocket;
@@ -39,8 +39,8 @@ describe('Threads and Quotes', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -56,19 +56,19 @@ describe('Threads and Quotes', () => {
     authToken = authResponse.body.token;
     userId = authResponse.body.user.id;
 
-    // Create workspace
-    const workspaceResponse = await request(app)
-      .post('/api/channels/workspaces')
+    // Create server
+    const serverResponse = await request(app)
+      .post('/api/channels/servers')
       .set('Authorization', `Bearer ${authToken}`)
       .send({
-        name: 'Thread Test Workspace'
+        name: 'Thread Test Server'
       });
     
-    workspaceId = workspaceResponse.body.id;
+    serverId = serverResponse.body.id;
 
     // Create channel
     const channelResponse = await request(app)
-      .post(`/api/channels/workspaces/${workspaceId}/channels`)
+      .post(`/api/channels/servers/${serverId}/channels`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         name: 'thread-test-channel'
@@ -77,12 +77,12 @@ describe('Threads and Quotes', () => {
     channelId = channelResponse.body.id;
 
     // Create a parent message for threading
+    parentMessageId = 'parent-msg-' + Date.now();
     const stmt = db.prepare(`
-      INSERT INTO messages (channel_id, user_id, content)
-      VALUES (?, ?, ?)
+      INSERT INTO messages (id, channel_id, user_id, content)
+      VALUES (?, ?, ?, ?)
     `);
-    const result = stmt.run(channelId, userId, 'This is a parent message');
-    parentMessageId = result.lastInsertRowid;
+    const result = stmt.run(parentMessageId, channelId, userId, 'This is a parent message');
 
     // Setup WebSocket server
     httpServer = createServer();
@@ -107,12 +107,14 @@ describe('Threads and Quotes', () => {
 
   describe('Threaded Messages', () => {
     it('should create a thread reply', () => {
+      const replyId = 'thread-reply-1-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, thread_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, thread_id)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        replyId,
         channelId,
         userId,
         'This is a thread reply',
@@ -122,19 +124,21 @@ describe('Threads and Quotes', () => {
       expect(result.changes).toBe(1);
 
       // Verify the thread relationship
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(replyId);
       expect(message.thread_id).toBe(parentMessageId);
     });
 
     it('should retrieve thread messages', () => {
       // Add more thread replies
+      const reply2Id = 'thread-reply-2-' + Date.now();
+      const reply3Id = 'thread-reply-3-' + Date.now() + 1;
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, thread_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, thread_id)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
-      stmt.run(channelId, userId, 'Thread reply 2', parentMessageId);
-      stmt.run(channelId, userId, 'Thread reply 3', parentMessageId);
+      stmt.run(reply2Id, channelId, userId, 'Thread reply 2', parentMessageId);
+      stmt.run(reply3Id, channelId, userId, 'Thread reply 3', parentMessageId);
 
       // Get thread messages
       const threadMessages = db.prepare(`
@@ -165,20 +169,22 @@ describe('Threads and Quotes', () => {
         LIMIT 1
       `).get(parentMessageId);
 
+      const nestedReplyId = 'nested-reply-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, thread_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, thread_id)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       // Thread replies should still reference the original parent
       const result = stmt.run(
+        nestedReplyId,
         channelId,
         userId,
         'Nested thread reply',
         threadReply.id
       );
 
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(nestedReplyId);
       expect(message.thread_id).toBe(threadReply.id);
     });
   });
@@ -188,21 +194,23 @@ describe('Threads and Quotes', () => {
 
     beforeAll(() => {
       // Create a message to quote
+      quotedMessageId = 'quoted-msg-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content)
-        VALUES (?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content)
+        VALUES (?, ?, ?, ?)
       `);
-      const result = stmt.run(channelId, userId, 'Message to be quoted');
-      quotedMessageId = result.lastInsertRowid;
+      const result = stmt.run(quotedMessageId, channelId, userId, 'Message to be quoted');
     });
 
     it('should create a message with a quote', () => {
+      const quoteReplyId = 'quote-reply-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, quoted_message_id)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, quoted_message_id)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        quoteReplyId,
         channelId,
         userId,
         'This is a reply to the quoted message',
@@ -212,7 +220,7 @@ describe('Threads and Quotes', () => {
       expect(result.changes).toBe(1);
 
       // Verify the quote relationship
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(quoteReplyId);
       expect(message.quoted_message_id).toBe(quotedMessageId);
     });
 
@@ -235,12 +243,14 @@ describe('Threads and Quotes', () => {
     });
 
     it('should handle quotes in threads', () => {
+      const threadQuoteId = 'thread-quote-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, thread_id, quoted_message_id)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, thread_id, quoted_message_id)
+        VALUES (?, ?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        threadQuoteId,
         channelId,
         userId,
         'Thread reply with quote',
@@ -248,37 +258,40 @@ describe('Threads and Quotes', () => {
         quotedMessageId
       );
 
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(threadQuoteId);
       expect(message.thread_id).toBe(parentMessageId);
       expect(message.quoted_message_id).toBe(quotedMessageId);
     });
 
     it('should handle deleted quoted messages gracefully', () => {
       // Create a message with quote
-      const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, quoted_message_id)
+      const tempMsgId = 'temp-msg-' + Date.now();
+      db.prepare(`
+        INSERT INTO messages (id, channel_id, user_id, content)
         VALUES (?, ?, ?, ?)
+      `).run(tempMsgId, channelId, userId, 'Temp message');
+      
+      const quoteMsgId = 'quote-deleted-' + Date.now();
+      const stmt = db.prepare(`
+        INSERT INTO messages (id, channel_id, user_id, content, quoted_message_id)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
-      const tempMsgResult = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content)
-        VALUES (?, ?, ?)
-      `).run(channelId, userId, 'Temp message');
-      
       const result = stmt.run(
+        quoteMsgId,
         channelId,
         userId,
         'Quote of soon-to-be-deleted message',
-        tempMsgResult.lastInsertRowid
+        tempMsgId
       );
 
       // Delete the quoted message
-      db.prepare('DELETE FROM messages WHERE id = ?').run(tempMsgResult.lastInsertRowid);
+      db.prepare('DELETE FROM messages WHERE id = ?').run(tempMsgId);
 
       // Verify the quoting message still exists
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(quoteMsgId);
       expect(message).toBeDefined();
-      expect(message.quoted_message_id).toBe(tempMsgResult.lastInsertRowid);
+      expect(message.quoted_message_id).toBe(tempMsgId);
 
       // Verify the join returns null for deleted message
       const messageWithQuote = db.prepare(`
@@ -286,7 +299,7 @@ describe('Threads and Quotes', () => {
         FROM messages m
         LEFT JOIN messages q ON m.quoted_message_id = q.id
         WHERE m.id = ?
-      `).get(result.lastInsertRowid);
+      `).get(quoteMsgId);
 
       expect(messageWithQuote.quoted_content).toBeNull();
     });
@@ -304,10 +317,10 @@ describe('Threads and Quotes', () => {
       });
 
       clientSocket.on('authenticated', () => {
-        clientSocket.emit('join_workspace', workspaceId);
+        clientSocket.emit('join_server', serverId);
       });
 
-      clientSocket.on('joined_workspace', () => {
+      clientSocket.on('joined_server', () => {
         clientSocket.emit('join_channel', channelId);
       });
 

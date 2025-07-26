@@ -1,5 +1,5 @@
 {
-  "name": "minimal-chat-client",
+  "name": "realm-client",
   "private": true,
   "version": "1.0.0",
   "type": "module",

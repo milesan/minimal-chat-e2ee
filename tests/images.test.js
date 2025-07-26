@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import authRoutes from '../server/api/auth.js';
-import workspaceRoutes from '../server/api/workspaces.js';
+import serverRoutes from '../server/api/servers.js';
 import channelRoutes from '../server/api/channels.js';
 import { initializeDatabase } from '../server/db/index.js';
 import db from '../server/db/index.js';
@@ -11,13 +11,13 @@ import { runMigrations } from '../server/db/migrations.js';
 const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
-app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/servers', serverRoutes);
 app.use('/api/channels', channelRoutes);
 
-describe('Image Sharing and Workspace Settings', () => {
+describe('Image Sharing and Server Settings', () => {
   let authToken, adminToken;
   let userId, adminId;
-  let workspaceId;
+  let serverId;
   let channelId;
 
   beforeAll(async () => {
@@ -34,8 +34,8 @@ describe('Image Sharing and Workspace Settings', () => {
       DELETE FROM voice_sessions;
       DELETE FROM messages;
       DELETE FROM channels;
-      DELETE FROM workspace_members;
-      DELETE FROM workspaces;
+      DELETE FROM server_members;
+      DELETE FROM servers;
       DELETE FROM users;
     `);
     db.exec('PRAGMA foreign_keys = ON');
@@ -62,24 +62,24 @@ describe('Image Sharing and Workspace Settings', () => {
     authToken = userResponse.body.token;
     userId = userResponse.body.user.id;
 
-    // Create workspace
-    const workspaceResponse = await request(app)
-      .post('/api/channels/workspaces')
+    // Create server
+    const serverResponse = await request(app)
+      .post('/api/channels/servers')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
-        name: 'Image Test Workspace'
+        name: 'Image Test Server'
       });
     
-    workspaceId = workspaceResponse.body.id;
+    serverId = serverResponse.body.id;
 
-    // Add regular user to workspace
-    db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-      workspaceId, userId, 'member'
+    // Add regular user to server
+    db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+      serverId, userId, 'member'
     );
 
     // Create channel
     const channelResponse = await request(app)
-      .post(`/api/channels/workspaces/${workspaceId}/channels`)
+      .post(`/api/channels/servers/${serverId}/channels`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         name: 'image-test-channel'
@@ -92,47 +92,47 @@ describe('Image Sharing and Workspace Settings', () => {
     // Don't close db as it's shared
   });
 
-  describe('Workspace Settings - Image Sharing', () => {
+  describe('Server Settings - Image Sharing', () => {
     it('should have images disabled by default', async () => {
-      // Check workspace directly in database
-      const workspace = db.prepare('SELECT * FROM workspaces WHERE id = ?').get(workspaceId);
-      expect(workspace.images_enabled).toBe(0);
-      expect(workspace.images_enabled_at).toBeNull();
+      // Check server directly in database
+      const server = db.prepare('SELECT * FROM servers WHERE id = ?').get(serverId);
+      expect(server.images_enabled).toBe(0);
+      expect(server.images_enabled_at).toBeNull();
     });
 
     it('should allow admin to enable images', async () => {
       // Update images setting directly in database
       db.prepare(`
-        UPDATE workspaces 
+        UPDATE servers 
         SET images_enabled = 1, images_enabled_at = unixepoch() 
         WHERE id = ?
-      `).run(workspaceId);
+      `).run(serverId);
       
-      const workspace = db.prepare('SELECT * FROM workspaces WHERE id = ?').get(workspaceId);
-      expect(workspace.images_enabled).toBe(1);
-      expect(workspace.images_enabled_at).toBeTruthy();
+      const server = db.prepare('SELECT * FROM servers WHERE id = ?').get(serverId);
+      expect(server.images_enabled).toBe(1);
+      expect(server.images_enabled_at).toBeTruthy();
     });
 
-    it('should verify workspace settings permissions', async () => {
+    it('should verify server settings permissions', async () => {
       // Check that regular member exists
       const member = db.prepare(
-        'SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?'
-      ).get(workspaceId, userId);
+        'SELECT * FROM server_members WHERE server_id = ? AND user_id = ?'
+      ).get(serverId, userId);
       expect(member.role).toBe('member');
       
       // Admin has owner role
       const admin = db.prepare(
-        'SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?'
-      ).get(workspaceId, adminId);
+        'SELECT * FROM server_members WHERE server_id = ? AND user_id = ?'
+      ).get(serverId, adminId);
       expect(admin.role).toBe('owner');
     });
 
     it('should track when images were enabled', async () => {
-      const workspace = db.prepare('SELECT * FROM workspaces WHERE id = ?').get(workspaceId);
-      expect(workspace.images_enabled).toBe(1);
-      expect(workspace.images_enabled_at).toBeTruthy();
+      const server = db.prepare('SELECT * FROM servers WHERE id = ?').get(serverId);
+      expect(server.images_enabled).toBe(1);
+      expect(server.images_enabled_at).toBeTruthy();
       
-      const enabledDate = new Date(workspace.images_enabled_at);
+      const enabledDate = new Date(server.images_enabled_at);
       expect(enabledDate).toBeInstanceOf(Date);
       expect(enabledDate.getTime()).toBeLessThanOrEqual(Date.now());
     });
@@ -140,12 +140,14 @@ describe('Image Sharing and Workspace Settings', () => {
 
   describe('Image Messages', () => {
     it('should allow image URLs in messages when enabled', () => {
+      const messageId = 'img-msg-1-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, image_url)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        messageId,
         channelId,
         userId,
         'Check out this image!',
@@ -154,42 +156,46 @@ describe('Image Sharing and Workspace Settings', () => {
 
       expect(result.changes).toBe(1);
 
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId);
       expect(message.image_url).toBe('https://example.com/image.jpg');
     });
 
     it('should handle messages with both text and image', () => {
+      const messageId = 'img-msg-2-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, image_url)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        messageId,
         channelId,
         userId,
         'Here is the screenshot of the bug',
         'https://example.com/bug-screenshot.png'
       );
 
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId);
       expect(message.content).toBe('Here is the screenshot of the bug');
       expect(message.image_url).toBe('https://example.com/bug-screenshot.png');
     });
 
     it('should handle image-only messages', () => {
+      const messageId = 'img-msg-3-' + Date.now();
       const stmt = db.prepare(`
-        INSERT INTO messages (channel_id, user_id, content, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO messages (id, channel_id, user_id, content, image_url)
+        VALUES (?, ?, ?, ?, ?)
       `);
       
       const result = stmt.run(
+        messageId,
         channelId,
         userId,
         '',
         'https://example.com/meme.gif'
       );
 
-      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(result.lastInsertRowid);
+      const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId);
       expect(message.content).toBe('');
       expect(message.image_url).toBe('https://example.com/meme.gif');
     });
@@ -197,27 +203,27 @@ describe('Image Sharing and Workspace Settings', () => {
     it('should disable images when setting is turned off', async () => {
       // Disable images directly in database
       db.prepare(`
-        UPDATE workspaces 
+        UPDATE servers 
         SET images_enabled = 0
         WHERE id = ?
-      `).run(workspaceId);
+      `).run(serverId);
 
-      const workspace = db.prepare('SELECT * FROM workspaces WHERE id = ?').get(workspaceId);
-      expect(workspace.images_enabled).toBe(0);
+      const server = db.prepare('SELECT * FROM servers WHERE id = ?').get(serverId);
+      expect(server.images_enabled).toBe(0);
       // images_enabled_at should remain unchanged
-      expect(workspace.images_enabled_at).toBeTruthy();
+      expect(server.images_enabled_at).toBeTruthy();
     });
   });
 
-  describe('Workspace Member Management', () => {
-    it('should list workspace members', async () => {
+  describe('Server Member Management', () => {
+    it('should list server members', async () => {
       // Query members directly from database
       const members = db.prepare(`
         SELECT wm.*, u.username 
-        FROM workspace_members wm
+        FROM server_members wm
         JOIN users u ON wm.user_id = u.id
-        WHERE wm.workspace_id = ?
-      `).all(workspaceId);
+        WHERE wm.server_id = ?
+      `).all(serverId);
 
       expect(members.length).toBe(2); // admin + regular user
       
@@ -231,14 +237,14 @@ describe('Image Sharing and Workspace Settings', () => {
     it('should allow admin to change member roles', async () => {
       // Update member role directly in database
       db.prepare(`
-        UPDATE workspace_members 
+        UPDATE server_members 
         SET role = 'admin' 
-        WHERE workspace_id = ? AND user_id = ?
-      `).run(workspaceId, userId);
+        WHERE server_id = ? AND user_id = ?
+      `).run(serverId, userId);
       
       const member = db.prepare(
-        'SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?'
-      ).get(workspaceId, userId);
+        'SELECT * FROM server_members WHERE server_id = ? AND user_id = ?'
+      ).get(serverId, userId);
       
       expect(member.role).toBe('admin');
     });
@@ -254,19 +260,19 @@ describe('Image Sharing and Workspace Settings', () => {
       
       const removeUserId = newUserResponse.body.user.id;
       
-      // Add to workspace
-      db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-        workspaceId, removeUserId, 'member'
+      // Add to server
+      db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+        serverId, removeUserId, 'member'
       );
 
       // Remove the user directly from database
       db.prepare(
-        'DELETE FROM workspace_members WHERE workspace_id = ? AND user_id = ?'
-      ).run(workspaceId, removeUserId);
+        'DELETE FROM server_members WHERE server_id = ? AND user_id = ?'
+      ).run(serverId, removeUserId);
       
       const member = db.prepare(
-        'SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?'
-      ).get(workspaceId, removeUserId);
+        'SELECT * FROM server_members WHERE server_id = ? AND user_id = ?'
+      ).get(serverId, removeUserId);
       
       expect(member).toBeUndefined();
     });
@@ -274,21 +280,21 @@ describe('Image Sharing and Workspace Settings', () => {
     it('should not allow owner to be removed', async () => {
       // Verify owner still exists
       const owner = db.prepare(
-        'SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ? AND role = ?'
-      ).get(workspaceId, adminId, 'owner');
+        'SELECT * FROM server_members WHERE server_id = ? AND user_id = ? AND role = ?'
+      ).get(serverId, adminId, 'owner');
       
       expect(owner).toBeDefined();
     });
   });
 
-  describe('Workspace Invitations', () => {
-    it('should generate workspace invite code', async () => {
+  describe('Server Invitations', () => {
+    it('should generate server invite code', async () => {
       // Simulate invite code generation
       const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
       expect(inviteCode).toMatch(/^[A-Z0-9]{8}$/);
     });
 
-    it('should add new user to workspace', async () => {
+    it('should add new user to server', async () => {
       // Create new user
       const newUserResponse = await request(app)
         .post('/api/auth/register')
@@ -299,15 +305,15 @@ describe('Image Sharing and Workspace Settings', () => {
       
       const newUserId = newUserResponse.body.user.id;
 
-      // Add user to workspace
-      db.prepare('INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
-        workspaceId, newUserId, 'member'
+      // Add user to server
+      db.prepare('INSERT INTO server_members (server_id, user_id, role) VALUES (?, ?, ?)').run(
+        serverId, newUserId, 'member'
       );
 
       // Verify membership
       const member = db.prepare(
-        'SELECT * FROM workspace_members WHERE workspace_id = ? AND user_id = ?'
-      ).get(workspaceId, newUserId);
+        'SELECT * FROM server_members WHERE server_id = ? AND user_id = ?'
+      ).get(serverId, newUserId);
       
       expect(member).toBeDefined();
       expect(member.role).toBe('member');
