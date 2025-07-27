@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useServer } from '../stores/serverStore.jsx';
 import { useAuth } from '../stores/authStore.jsx';
+import { getApiUrl } from '../config.js';
 import InvitationManager from './InvitationManager.jsx';
 import './ServerSettings.css';
 
@@ -25,7 +26,7 @@ export default function ServerSettings({ onClose }) {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`/api/servers/${currentServer.id}/settings`, {
+      const response = await fetch(getApiUrl(`/api/servers/${currentServer.id}/settings`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -50,7 +51,7 @@ export default function ServerSettings({ onClose }) {
     setError('');
 
     try {
-      const response = await fetch(`/api/servers/${currentServer.id}/settings`, {
+      const response = await fetch(getApiUrl(`/api/servers/${currentServer.id}/settings`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

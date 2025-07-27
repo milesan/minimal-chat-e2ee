@@ -55,7 +55,7 @@ export function ServerProvider({ children }) {
 
   const fetchServers = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/servers'), {
+      const response = await fetch(getApiUrl('/api/channels/servers'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -79,7 +79,7 @@ export function ServerProvider({ children }) {
 
   const fetchChannels = async (serverId) => {
     try {
-      const response = await fetch(`/api/servers/${serverId}/channels`, {
+      const response = await fetch(getApiUrl(`/api/channels/servers/${serverId}/channels`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -94,7 +94,7 @@ export function ServerProvider({ children }) {
 
   const fetchMessages = async (channelId) => {
     try {
-      const response = await fetch(`/api/servers/channels/${channelId}/messages`, {
+      const response = await fetch(getApiUrl(`/api/channels/${channelId}/messages`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -106,7 +106,7 @@ export function ServerProvider({ children }) {
 
   const createServer = async (name, description = '', visibility = 'private', encrypted = false) => {
     try {
-      const response = await fetch(getApiUrl('/api/servers'), {
+      const response = await fetch(getApiUrl('/api/channels/servers'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -115,16 +115,22 @@ export function ServerProvider({ children }) {
         body: JSON.stringify({ name, description, visibility, encrypted })
       });
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response');
+      // Check if response is ok first
+      if (!response.ok) {
+        // Try to parse error message
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to create server');
+        } else {
+          // Non-JSON error response
+          const text = await response.text();
+          console.error('Server error response:', text);
+          throw new Error(`Server error (${response.status}): ${text || 'Unknown error'}`);
+        }
       }
 
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create server');
-      }
 
       await fetchServers();
       return data;
@@ -139,7 +145,7 @@ export function ServerProvider({ children }) {
   const createChannel = async (name, encrypted = false) => {
     if (!currentServer) return;
 
-    const response = await fetch(`/api/servers/${currentServer.id}/channels`, {
+    const response = await fetch(getApiUrl(`/api/channels/servers/${currentServer.id}/channels`), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
