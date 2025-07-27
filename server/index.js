@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import { config } from './config.js';
 import { initializeDatabase } from './db/index.js';
 import { runMigrations } from './db/migrations.js';
+import { fixProductionMigration } from './db/fix-production-migration.js';
 import authRoutes from './api/auth.js';
 import channelRoutes from './api/channels.js';
 import linkRoutes from './api/links.js';
@@ -149,6 +150,14 @@ console.log('Starting server with configuration:', {
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   initializeDatabase().then(() => {
     console.log('Database initialized successfully');
+    
+    // Fix production migration issues first
+    try {
+      fixProductionMigration();
+    } catch (error) {
+      console.error('Failed to fix production migration:', error);
+    }
+    
     runMigrations();
     console.log('Migrations completed');
     httpServer.listen(PORT, '0.0.0.0', () => {
