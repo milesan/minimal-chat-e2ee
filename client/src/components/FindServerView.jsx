@@ -20,7 +20,7 @@ export default function FindServerView({ onClose }) {
 
   const fetchPublicServers = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/servers/public'), {
+      const response = await fetch(getApiUrl('/api/channels/servers/public'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -42,7 +42,7 @@ export default function FindServerView({ onClose }) {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl(`/api/servers/${serverId}/join`), {
+      const response = await fetch(getApiUrl(`/api/channels/servers/${serverId}/join`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -70,7 +70,7 @@ export default function FindServerView({ onClose }) {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('/api/servers/join-by-code'), {
+      const response = await fetch(getApiUrl('/api/channels/servers/join-by-code'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
