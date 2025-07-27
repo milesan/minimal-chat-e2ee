@@ -22,6 +22,11 @@ const app = express();
 // Disable X-Powered-By header
 app.disable('x-powered-by');
 
+// Trust proxy in production (Railway runs behind a proxy)
+if (config.NODE_ENV === 'production') {
+  app.set('trust proxy', true);
+}
+
 // CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
