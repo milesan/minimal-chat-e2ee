@@ -18,25 +18,10 @@ export const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'No token provided' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, tokenData) => {
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid token' });
-    
-    // Verify user exists in database
-    try {
-      const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(tokenData.id);
-      if (!user) {
-        return res.status(403).json({ error: 'User not found. Please login again.' });
-      }
-      
-      // Update last_seen
-      db.prepare('UPDATE users SET last_seen = unixepoch() WHERE id = ?').run(user.id);
-      
-      req.user = user;
-      next();
-    } catch (error) {
-      logError('auth.authenticateToken', error);
-      return res.status(500).json({ error: 'Authentication failed' });
-    }
+    req.user = user;
+    next();
   });
 };
 
