@@ -154,12 +154,6 @@ export const handleSocketConnection = (io, socket) => {
     });
   }));
 
-  socket.on('dm_message', applyRateLimit(socket, 'dm_message', (message) => {
-    if (!userId) return;
-    
-    // Emit to the receiver if they're online
-    socket.to(`user:${message.receiver_id}`).emit('new_dm', message);
-  }));
 
   socket.on('disconnect', () => {
     if (userId) {

@@ -97,10 +97,6 @@ export default function DMView() {
         const message = await response.json();
         setMessages(prev => [...prev, message]);
         
-        if (socket) {
-          socket.emit('dm_message', message);
-        }
-        
         // Update conversations list
         fetchConversations();
       }
