@@ -136,6 +136,24 @@ export default function createDMRouter(io) {
     }
   });
 
+  // Get all users for DM search
+  router.get('/users', (req, res) => {
+    const userId = req.user.id;
+
+    try {
+      const users = db.prepare(`
+        SELECT id, username 
+        FROM users 
+        WHERE id != ?
+        ORDER BY username ASC
+      `).all(userId);
+
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+
   return router;
 }
 

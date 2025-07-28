@@ -60,14 +60,21 @@ export function ServerProvider({ children }) {
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        console.error('Failed to fetch servers:', error);
+        if (response.status === 403) {
+          const error = await response.json();
+          console.error('Failed to fetch servers:', error);
+          // User needs to re-authenticate
+          setServers([]);
+        } else {
+          console.error('Failed to fetch servers:', response.status);
+          setServers([]);
+        }
         return;
       }
       
       const data = await response.json();
-      setServers(data);
-      if (data.length > 0 && !currentServer) {
+      setServers(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0 && !currentServer) {
         setCurrentServer(data[0]);
       }
     } catch (error) {
