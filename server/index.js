@@ -71,9 +71,14 @@ const io = new Server(httpServer, {
 });
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP'
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Increased from 100 to 500 requests per window
+  message: 'Too many requests from this IP',
+  standardHeaders: true, // Return rate limit info in headers
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many requests, please try again later.' });
+  }
 });
 
 // HTTPS enforcement in production

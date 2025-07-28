@@ -82,6 +82,16 @@ export function ServerProvider({ children }) {
       const response = await fetch(getApiUrl(`/api/channels/servers/${serverId}/channels`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.error('Rate limited - too many requests');
+          return;
+        }
+        console.error('Failed to fetch channels:', response.status);
+        return;
+      }
+      
       const data = await response.json();
       setChannels(data);
       if (data.length > 0 && !currentChannel) {
@@ -97,6 +107,22 @@ export function ServerProvider({ children }) {
       const response = await fetch(getApiUrl(`/api/channels/${channelId}/messages`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.error('Rate limited - too many requests');
+          return;
+        }
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          console.error('Failed to fetch messages:', error);
+        } else {
+          console.error('Failed to fetch messages: Server error');
+        }
+        return;
+      }
+      
       const data = await response.json();
       setMessages(prev => ({ ...prev, [channelId]: data }));
     } catch (error) {
