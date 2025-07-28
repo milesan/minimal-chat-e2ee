@@ -25,13 +25,21 @@ export default function FindServerView({ onClose }) {
       });
       
       if (!response.ok) {
+        if (response.status === 403) {
+          console.error('Authentication failed - please log in again');
+          setError('Please log in again to view public realms');
+          setPublicServers([]);
+          return;
+        }
         throw new Error('Failed to fetch public realms');
       }
       
       const data = await response.json();
-      setPublicServers(data);
+      setPublicServers(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error('Failed to load public realms:', error);
       setError('Failed to load public realms');
+      setPublicServers([]);
     } finally {
       setLoading(false);
     }

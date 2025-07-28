@@ -48,10 +48,22 @@ export default function DMView() {
       const response = await fetch(getApiUrl('/api/dms'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+          console.error('Authentication failed - please log in again');
+          setConversations([]);
+          return;
+        }
+        console.error('Failed to fetch conversations:', response.status);
+        return;
+      }
+      
       const data = await response.json();
-      setConversations(data);
+      setConversations(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
+      setConversations([]);
     }
   };
 
@@ -60,23 +72,43 @@ export default function DMView() {
       const response = await fetch(getApiUrl('/api/users'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+          console.error('Authentication failed - please log in again');
+          setUsers([]);
+          return;
+        }
+        console.error('Failed to fetch users:', response.status);
+        return;
+      }
+      
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
     }
   };
 
   const selectConversation = async (otherUser) => {
     setSelectedUser(otherUser);
     try {
-      const response = await fetch(`/api/dms/${otherUser.id || otherUser.other_user_id}`, {
+      const response = await fetch(getApiUrl(`/api/dms/${otherUser.id || otherUser.other_user_id}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        console.error('Failed to fetch messages:', response.status);
+        setMessages([]);
+        return;
+      }
+      
       const data = await response.json();
-      setMessages(data);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
+      setMessages([]);
     }
   };
 
