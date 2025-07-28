@@ -9,6 +9,9 @@
 
   # Default build command.
   command = "npm run build"
+  
+  # Environment variables for production build
+  environment = { VITE_API_URL = "https://minimal-chat-e2ee-production.up.railway.app", VITE_WS_URL = "https://minimal-chat-e2ee-production.up.railway.app" }
 
 [[redirects]]
   from = "/api/*"
