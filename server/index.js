@@ -12,7 +12,7 @@ import { fixProductionMigration } from './db/fix-production-migration.js';
 import authRoutes from './api/auth.js';
 import channelRoutes from './api/channels.js';
 import linkRoutes from './api/links.js';
-import dmRoutes from './api/dms.js';
+import createDMRouter from './api/dms.js';
 import serverRoutes from './api/servers.js';
 import healthRoutes from './health.js';
 import { handleSocketConnection } from './websocket/index.js';
@@ -131,7 +131,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/links', linkRoutes);
 app.use('/api/servers', serverRoutes);
-app.use('/api', dmRoutes);
 app.use('/api', healthRoutes);
 
 // Error handling middleware
@@ -142,6 +141,10 @@ app.use((err, req, res, next) => {
   }
   res.status(500).json({ error: 'Internal server error' });
 });
+
+// Add DM routes with io instance
+const dmRoutes = createDMRouter(io);
+app.use('/api', dmRoutes);
 
 io.on('connection', (socket) => handleSocketConnection(io, socket));
 
