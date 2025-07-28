@@ -23,6 +23,7 @@ export default function Sidebar({ view, setView }) {
   const [showServerModal, setShowServerModal] = useState(false);
   const [showChannelModal, setShowChannelModal] = useState(false);
   const [serverName, setServerName] = useState('');
+  const [serverDescription, setServerDescription] = useState('');
   const [channelName, setChannelName] = useState('');
   const [serverError, setServerError] = useState('');
   const [channelError, setChannelError] = useState('');
@@ -36,6 +37,7 @@ export default function Sidebar({ view, setView }) {
   const [createEncryptedServer, setCreateEncryptedServer] = useState(false);
   const [showServerKeyModal, setShowServerKeyModal] = useState(false);
   const [newServerKey, setNewServerKey] = useState(null);
+  const [createPublicServer, setCreatePublicServer] = useState(false);
   const { setPassword } = useEncryption();
 
   const handleCreateServer = async (e) => {
@@ -43,9 +45,12 @@ export default function Sidebar({ view, setView }) {
     setServerError('');
     setServerLoading(true);
     try {
-      const newServer = await createServer(serverName, '', 'private', createEncryptedServer);
+      const visibility = createPublicServer ? 'public' : 'private';
+      const newServer = await createServer(serverName, serverDescription, visibility, createEncryptedServer);
       setServerName('');
+      setServerDescription('');
       setCreateEncryptedServer(false);
+      setCreatePublicServer(false);
       setShowServerModal(false);
       
       // If encrypted and key was generated, show it to the user
@@ -277,17 +282,47 @@ export default function Sidebar({ view, setView }) {
                 />
                 <label htmlFor="server-name" className="input-label">Realm name</label>
               </div>
+              <div className="input-group">
+                <textarea
+                  id="server-description"
+                  className="input textarea"
+                  placeholder=" "
+                  value={serverDescription}
+                  onChange={(e) => setServerDescription(e.target.value)}
+                  disabled={serverLoading}
+                  rows="3"
+                />
+                <label htmlFor="server-description" className="input-label">Description (optional)</label>
+              </div>
               <div className="checkbox-group">
                 <input
                   type="checkbox"
                   id="server-encrypted"
                   checked={createEncryptedServer}
                   onChange={(e) => setCreateEncryptedServer(e.target.checked)}
-                  disabled={serverLoading}
+                  disabled={serverLoading || createPublicServer}
                 />
                 <label htmlFor="server-encrypted">
                   Create encrypted realm
                   <span className="checkbox-hint">Realm data will be end-to-end encrypted</span>
+                </label>
+              </div>
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="server-public"
+                  checked={createPublicServer}
+                  onChange={(e) => {
+                    setCreatePublicServer(e.target.checked);
+                    if (e.target.checked) {
+                      setCreateEncryptedServer(false);
+                    }
+                  }}
+                  disabled={serverLoading}
+                />
+                <label htmlFor="server-public">
+                  Make realm public
+                  <span className="checkbox-hint">Anyone can find and join this realm</span>
                 </label>
               </div>
               {serverError && (
